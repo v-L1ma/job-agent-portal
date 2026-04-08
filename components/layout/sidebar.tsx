@@ -26,7 +26,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Candidaturas", href: "/candidaturas", icon: Briefcase },
+    { name: "Vagas", href: "/vagas", icon: Briefcase },
     { name: "Respostas", href: "/respostas", icon: MessageSquare },
     { name: "Preferências", href: "/preferencias", icon: SlidersHorizontal },
     { name: "Plataformas", href: "/plataformas", icon: Globe },

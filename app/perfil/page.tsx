@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -5,9 +9,62 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge as BadgeIcon, MapPin, Shield, Edit2 } from "lucide-react";
+import { Badge as BadgeIcon, MapPin, Shield, Edit2, Upload, LoaderCircle } from "lucide-react";
+import { ApiError, uploadUserCv } from "@/lib/api";
+import { useAuth } from "@/components/providers/auth-provider";
+
+function normalizeError(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Não foi possível enviar o currículo.";
+}
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [uploadingCv, setUploadingCv] = useState(false);
+  const [cvMessage, setCvMessage] = useState<string | null>(null);
+
+  const handleUploadCv = async () => {
+    if (!cvFile) {
+      setCvMessage("Selecione um arquivo PDF para enviar.");
+      return;
+    }
+
+    if (cvFile.type !== "application/pdf") {
+      setCvMessage("A API aceita apenas arquivos PDF.");
+      return;
+    }
+
+    try {
+      setUploadingCv(true);
+      setCvMessage(null);
+
+      const response = await uploadUserCv(cvFile);
+      setCvMessage(`Currículo enviado com sucesso. URL: ${response.url}`);
+      setCvFile(null);
+    } catch (uploadError) {
+      if (uploadError instanceof ApiError && uploadError.status === 401) {
+        setCvMessage("Sua sessão expirou. Faça login novamente.");
+        logout();
+        router.replace("/auth/login");
+        return;
+      }
+
+      setCvMessage(normalizeError(uploadError));
+    } finally {
+      setUploadingCv(false);
+    }
+  };
+
   return (
     <DashboardLayout title="Meu Perfil">
       <div className="max-w-4xl mx-auto space-y-12 pb-12">
@@ -36,6 +93,49 @@ export default function ProfilePage() {
             </div>
           </div>
         </section>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Currículo (PDF)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cv-file">Upload do currículo base</Label>
+              <Input
+                id="cv-file"
+                type="file"
+                accept="application/pdf"
+                onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            {cvFile && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Arquivo selecionado: {cvFile.name}
+              </p>
+            )}
+
+            {cvMessage && (
+              <p className="text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-slate-600 dark:text-slate-300 break-all">
+                {cvMessage}
+              </p>
+            )}
+
+            <Button onClick={() => void handleUploadCv()} disabled={uploadingCv || !cvFile}>
+              {uploadingCv ? (
+                <>
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
+                  Enviando PDF...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Enviar currículo
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
 
         <form className="space-y-10">
           {/* Informações Pessoais */}

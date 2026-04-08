@@ -1,8 +1,7 @@
 "use client";
 
-import { Bell, Search, User, LogOut, Menu, Sun, Moon, Monitor } from "lucide-react";
+import { Bell, User, LogOut, Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 import { ThemeToggleSwitch } from "@/components/theme-toggle-switch";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title: string;
@@ -24,12 +22,22 @@ interface HeaderProps {
 }
 
 export function Header({ title, onToggleSidebar }: HeaderProps) {
-  const { setTheme, theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { session, logout } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const initials = session?.name
+    ? session.name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("")
+    : "JD";
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/auth/login");
+  };
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-primary/20 bg-white dark:bg-slate-950 flex items-center justify-between px-8 shrink-0">
@@ -55,7 +63,7 @@ export function Header({ title, onToggleSidebar }: HeaderProps) {
           <DropdownMenuTrigger className="cursor-pointer hover:opacity-80 transition-opacity outline-none">
             <Avatar>
               <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={8} className="w-56 p-1">
@@ -74,7 +82,11 @@ export function Header({ title, onToggleSidebar }: HeaderProps) {
 
               <DropdownMenuSeparator className="my-1" />
               
-              <DropdownMenuItem variant="destructive" className="cursor-pointer flex items-center gap-3 px-3 py-2 text-red-500">
+              <DropdownMenuItem
+                variant="destructive"
+                className="cursor-pointer flex items-center gap-3 px-3 py-2 text-red-500"
+                onClick={handleLogout}
+              >
                 <LogOut className="w-4 h-4" />
                 <span>Sair</span>
               </DropdownMenuItem>
