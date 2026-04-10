@@ -119,16 +119,15 @@ export default function ApplicationsPage() {
     try {
       setError(null);
 
-      await performSearch("", {
+      await performSearch({
         stack: debouncedStackFilter.trim() || undefined,
-        location: debouncedLocationFilter.trim() || undefined,
         page,
         pageSize: PAGE_SIZE,
       });
     } catch (loadError) {
       setError(normalizeError(loadError));
     }
-  }, [debouncedLocationFilter, debouncedStackFilter, page, performSearch]);
+  }, [debouncedStackFilter, page, performSearch]);
 
   useEffect(() => {
     void loadJobs();
@@ -246,25 +245,13 @@ export default function ApplicationsPage() {
           <div className="relative flex items-center w-full md:flex-1 md:max-w-[380px]">
             <Search className="absolute left-3 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="Filtrar por stack"
+              placeholder="Faça sua busca por vagas (ex: React, .NET, etc)"
               value={stackFilter}
               onChange={(event) => {
                 setPage(1);
                 setStackFilter(event.target.value);
               }}
               className="pl-10 h-10"
-            />
-          </div>
-
-          <div className="relative flex items-center w-full md:flex-1 md:max-w-[320px]">
-            <Input
-              placeholder="Filtrar por localização"
-              value={locationFilter}
-              onChange={(event) => {
-                setPage(1);
-                setLocationFilter(event.target.value);
-              }}
-              className="h-10"
             />
           </div>
 
@@ -340,12 +327,12 @@ export default function ApplicationsPage() {
                         <div className="space-y-2 mb-3 relative pr-8">
                           <div className="absolute top-0 right-0">
                             <DropdownMenu>
-                              <DropdownMenuTrigger className="h-8 w-8 text-white hover:text-white dark:hover:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
+                              <DropdownMenuTrigger className="h-8 w-8 text-slate-800 hover:text-slate-500 dark:hover:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
                                 <MoreVertical className="w-4 h-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-fit p-1">
                                 <DropdownMenuItem 
-                                  className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap hover:text-white"
+                                  className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap"
                                   onClick={() => setFeedbackJobId(job.id)}
                                 >
                                   <ThumbsDown className="w-4 h-4" />

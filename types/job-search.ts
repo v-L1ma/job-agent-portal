@@ -30,13 +30,12 @@ export interface UseJobSearchResult {
   isPolling: boolean;
   meta: JobSearchMeta | null;
   error: string | null;
-  searchJobs: (query: string, options?: JobSearchOptions) => Promise<void>;
+  searchJobs: (options?: JobSearchOptions) => Promise<void>;
   reset: () => void;
 }
 
 export interface JobSearchOptions {
   stack?: string | null;
-  location?: string | null;
   page?: number;
   pageSize?: number;
   onProgress?: (data: JobSearchResponse) => void;

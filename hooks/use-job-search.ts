@@ -31,10 +31,9 @@ export function useJobSearch(): UseJobSearchResult {
   const pollingRef = useRef<boolean>(false);
 
   const searchJobs = useCallback(
-    async (query: string, options: JobSearchOptions = {}) => {
+    async (options: JobSearchOptions = {}) => {
       const {
         stack = null,
-        location = null,
         page = 1,
         pageSize = 10,
         onProgress = null,
@@ -75,13 +74,11 @@ export function useJobSearch(): UseJobSearchResult {
 
         try {
           const params: Record<string, string | number> = {
-            query,
             page,
             pageSize,
           };
 
           if (stack) params.stack = stack;
-          if (location) params.location = location;
 
           const response = await api.get<JobSearchResponse | JobsSearchApiPayload>('/api/jobs/search', {
             params,

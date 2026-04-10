@@ -11,7 +11,7 @@ import {
   Zap,
   SlidersHorizontal,
   Globe,
-  MessageSquare,
+  FileText,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -27,7 +27,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Vagas", href: "/vagas", icon: Briefcase },
-    { name: "Respostas", href: "/respostas", icon: MessageSquare },
+    { name: "Currículo", href: "/curriculo", icon: FileText },
     { name: "Preferências", href: "/preferencias", icon: SlidersHorizontal },
     { name: "Plataformas", href: "/plataformas", icon: Globe },
   ];
