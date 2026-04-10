@@ -38,7 +38,6 @@ export interface JobsQuery {
   location?: string;
   page?: number;
   pageSize?: number;
-  triggerScraper?: boolean;
 }
 
 export interface JobListItem {
@@ -131,7 +130,7 @@ export async function forgotPassword(payload: ForgotPasswordPayload): Promise<st
 }
 
 export async function getJobs(query: JobsQuery): Promise<PagedJobsResponse> {
-  const response = await api.get<PagedJobsResponse>("/api/jobs", {
+  const response = await api.get<PagedJobsResponse>("/api/jobs/search", {
     params: query,
   });
   return response.data;

@@ -24,17 +24,18 @@ import {
   Download,
   CheckCircle2,
   X,
+  Clock,
 } from "lucide-react";
 import {
   ApiError,
   generateCvForJob,
   getJobById,
-  getJobs,
   evaluateJob,
   type JobDetailsResponse,
   type JobListItem,
   type GenerateCvResponse,
 } from "@/lib/api";
+import { useJobSearch } from "@/hooks/use-job-search";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
   DropdownMenu,
@@ -70,6 +71,14 @@ function normalizeError(error: unknown): string {
 export default function ApplicationsPage() {
   const router = useRouter();
   const { logout } = useAuth();
+  const {
+    jobs: searchJobs,
+    isLoading: isSearching,
+    isPolling,
+    meta: searchMeta,
+    error: searchError,
+    searchJobs: performSearch,
+  } = useJobSearch();
 
   const [stackFilter, setStackFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
@@ -79,9 +88,6 @@ export default function ApplicationsPage() {
   const debouncedLocationFilter = useDebounce(locationFilter, 500);
 
   const [jobs, setJobs] = useState<JobListItem[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -103,32 +109,34 @@ export default function ApplicationsPage() {
     router.replace("/auth/login");
   }, [logout, router]);
 
+  const jobsCount = jobs.length;
+  const totalItems = searchMeta?.totalItems ?? jobsCount;
+  const totalPages = Math.max(searchMeta?.totalPages ?? 1, 1);
+  const loading = isSearching;
+  const displayedError = error ?? searchError;
+
   const loadJobs = useCallback(async () => {
     try {
-      setLoading(true);
       setError(null);
 
-      const data = await getJobs({
+      await performSearch("", {
         stack: debouncedStackFilter.trim() || undefined,
         location: debouncedLocationFilter.trim() || undefined,
         page,
         pageSize: PAGE_SIZE,
-        triggerScraper: true
       });
-
-      setJobs(data.items);
-      setTotalItems(data.totalItems);
-      setTotalPages(Math.max(data.totalPages, 1));
     } catch (loadError) {
       setError(normalizeError(loadError));
-    } finally {
-      setLoading(false);
     }
-  }, [debouncedLocationFilter, debouncedStackFilter, page]);
+  }, [debouncedLocationFilter, debouncedStackFilter, page, performSearch]);
 
   useEffect(() => {
     void loadJobs();
   }, [loadJobs]);
+
+  useEffect(() => {
+    setJobs(searchJobs);
+  }, [searchJobs]);
 
   const openDetails = async (jobId: string) => {
     try {
@@ -267,6 +275,30 @@ export default function ApplicationsPage() {
           <div className="ml-auto text-sm text-slate-500 dark:text-slate-400">{jobsCounterLabel}</div>
         </div>
 
+        {isPolling && (
+          <div className="px-6 py-3 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-3">
+              <Clock className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+              <div>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Buscando vagas nas plataformas...
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Isso pode levar alguns instantes
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {searchError && (
+          <div className="px-6 py-3 bg-red-50 dark:bg-red-950/20 border-b border-red-200 dark:border-red-800">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {searchError}
+            </p>
+          </div>
+        )}
+
         {generationMessage && (
           <div className="px-6 pt-4">
             <p className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2 text-slate-600 dark:text-slate-300">
@@ -278,26 +310,26 @@ export default function ApplicationsPage() {
         <div className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-900/10 h-full">
           <ScrollArea className="h-full">
             <div className="p-8 max-w-7xl mx-auto space-y-6">
-              {loading && (
+              {jobsCount === 0 && (loading || isPolling) && (
                 <div className="py-16 text-center text-slate-500 dark:text-slate-400">
                   <LoaderCircle className="w-5 h-5 mx-auto mb-2 animate-spin" />
-                  Carregando vagas...
+                  {isPolling ? "Buscando vagas nas plataformas..." : "Carregando vagas..."}
                 </div>
               )}
 
-              {!loading && error && (
+              {!loading && displayedError && (
                 <div className="rounded-lg border border-red-300/40 bg-red-500/10 text-red-500 px-4 py-3 text-sm">
-                  {error}
+                  {displayedError}
                 </div>
               )}
 
-              {!loading && !error && jobs.length === 0 && (
+              {!loading && !displayedError && jobsCount === 0 && (
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                   Nenhuma vaga encontrada para os filtros aplicados.
                 </div>
               )}
 
-              {!loading && !error && jobs.length > 0 && (
+              {!loading && !displayedError && jobsCount > 0 && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {jobs.map((job) => (
@@ -308,12 +340,12 @@ export default function ApplicationsPage() {
                         <div className="space-y-2 mb-3 relative pr-8">
                           <div className="absolute top-0 right-0">
                             <DropdownMenu>
-                              <DropdownMenuTrigger className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
+                              <DropdownMenuTrigger className="h-8 w-8 text-white hover:text-white dark:hover:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
                                 <MoreVertical className="w-4 h-4" />
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="min-w-[160px] p-1">
+                              <DropdownMenuContent align="end" className="w-fit p-1">
                                 <DropdownMenuItem 
-                                  className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30"
+                                  className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap hover:text-white"
                                   onClick={() => setFeedbackJobId(job.id)}
                                 >
                                   <ThumbsDown className="w-4 h-4" />
@@ -332,12 +364,12 @@ export default function ApplicationsPage() {
 
                         <div className="mt-auto space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/60">
                           <div className="flex items-center justify-between">
-                            <Badge
+                            {/* <Badge
                               variant="secondary"
                               className={job.isApplied ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}
                             >
                               {job.isApplied ? "Aplicada" : "Pendente"}
-                            </Badge>
+                            </Badge> */}
                             <a
                               href={job.url}
                               target="_blank"
@@ -349,7 +381,7 @@ export default function ApplicationsPage() {
                             </a>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Button variant="outline" className="flex-1" onClick={() => void openDetails(job.id)}>
                               Ver detalhes
                             </Button>
@@ -506,7 +538,7 @@ export default function ApplicationsPage() {
                           </div>
                           <div>
                             <p className="text-xs text-slate-500 mb-1">Keywords</p>
-                            <p className="text-sm text-slate-700 dark:text-slate-300">
+                            <p className="text-sm text-slate-700ve dark:text-slate-300">
                               {selectedJob.analysis.keywords}
                             </p>
                           </div>
