@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, CheckCircle, BriefcaseBusiness, LoaderCircle, AlertCircle } from "lucide-react";
+import { X, CheckCircle, LoaderCircle, AlertCircle, Search, Lightbulb } from "lucide-react";
 import { ApiError, saveUserPreferences, getUserPreferences } from "@/lib/api";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -27,45 +27,40 @@ export default function PreferencesPage() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const [skills, setSkills] = useState<string[]>([]);
-  const [newSkill, setNewSkill] = useState("");
-  const [level, setLevel] = useState("Pleno");
-  const [area, setArea] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [level, setLevel] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-  
+
   // Estado para armazenar as preferências originais
   const [originalPreferences, setOriginalPreferences] = useState<{
     skills: string[];
     level: string;
-    area: string;
   } | null>(null);
 
   // Verifica se há alterações em relação às preferências originais
   const hasChanges = (() => {
     if (!originalPreferences) return false;
-    
-    const skillsChanged = JSON.stringify(skills) !== JSON.stringify(originalPreferences.skills);
+
+    const keywordsChanged = JSON.stringify(keywords) !== JSON.stringify(originalPreferences.skills);
     const levelChanged = level !== originalPreferences.level;
-    const areaChanged = area !== originalPreferences.area;
-    
-    return skillsChanged || levelChanged || areaChanged;
+
+    return keywordsChanged || levelChanged;
   })();
 
   useEffect(() => {
     async function loadPreferences() {
       try {
         const data = await getUserPreferences();
-        setSkills(data.skills);
+        setKeywords(data.skills);
         setLevel(data.level);
-        setArea(data.area);
-        
+
         // Armazena as preferências originais para comparação e reversão
         setOriginalPreferences({
           skills: data.skills,
           level: data.level,
-          area: data.area,
         });
       } catch (error) {
         console.error("Erro ao carregar preferências:", error);
@@ -76,30 +71,38 @@ export default function PreferencesPage() {
     loadPreferences();
   }, []);
 
-  const handleAddSkill = () => {
-    const value = newSkill.trim();
+  const handleAddKeyword = () => {
+    const value = newKeyword.trim();
     if (!value) {
       return;
     }
 
-    const exists = skills.some((item) => item.toLowerCase() === value.toLowerCase());
+    const exists = keywords.some((item) => item.toLowerCase() === value.toLowerCase());
     if (exists) {
-      setNewSkill("");
+      setNewKeyword("");
       return;
     }
 
-    setSkills((current) => [...current, value]);
-    setNewSkill("");
+    setKeywords((current) => [...current, value]);
+    setNewKeyword("");
   };
 
-  const handleRemoveSkill = (value: string) => {
-    setSkills((current) => current.filter((item) => item !== value));
+  const handleRemoveKeyword = (value: string) => {
+    setKeywords((current) => current.filter((item) => item !== value));
   };
 
   const handleSave = async () => {
-    if (!skills.length) {
+    if (!keywords.length) {
       setMessage({
-        text: "Adicione pelo menos uma skill para salvar suas preferências.",
+        text: "Adicione pelo menos uma palavra-chave para salvar suas preferências.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!level) {
+      setMessage({
+        text: "Selecione uma senioridade obrigatória.",
         type: "error",
       });
       return;
@@ -110,16 +113,15 @@ export default function PreferencesPage() {
       setMessage(null);
 
       await saveUserPreferences({
-        skills,
+        skills: keywords,
         level,
-        area,
+        area: "",
       });
 
       // Atualiza as preferências originais após salvar com sucesso
       setOriginalPreferences({
-        skills,
+        skills: keywords,
         level,
-        area,
       });
 
       setMessage({ text: "Preferências salvas com sucesso!", type: "success" });
@@ -129,6 +131,15 @@ export default function PreferencesPage() {
       setSaving(false);
     }
   };
+
+  const exampleKeywords = [
+    "Técnico Informática",
+    "Suporte N1",
+    "React",
+    "Desenvolvedor",
+    "Node.js",
+    "Banco de Dados",
+  ];
 
   return (
     <DashboardLayout title="Preferências de Busca">
@@ -143,138 +154,166 @@ export default function PreferencesPage() {
             <header>
               <h2 className="text-3xl font-black tracking-tight mb-2">Preferências de Busca</h2>
               <p className="text-slate-500 dark:text-slate-400">
-                Ajuste skills, senioridade e área para melhorar o match das vagas encontradas.
+                Defina as palavras-chave que serão usadas para encontrar vagas compatíveis com seu perfil.
               </p>
             </header>
 
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <h3 className="text-lg font-bold">Skills</h3>
-          </div>
+            {/* Keywords Section */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Search className="w-5 h-5 text-emerald-500" />
+                <h3 className="text-lg font-bold">Palavras-chave</h3>
+              </div>
 
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
-            <div className="flex flex-wrap gap-2 mb-3">
-              {skills.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 py-1.5 px-3 rounded-lg flex gap-1 items-center border-none cursor-pointer transition-opacity hover:opacity-80"
-                >
-                  {tag}
-                  <button
-                    className="inline-flex"
-                    onClick={() => handleRemoveSkill(tag)}
-                    aria-label={`Remover ${tag}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
+              {/* Info Box */}
+              <div className="p-5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
+                <div className="flex gap-3">
+                  <Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-blue-900 dark:text-blue-300">Como funciona?</h4>
+                    <p className="text-sm text-blue-800 dark:text-blue-400 leading-relaxed">
+                      As buscas de vagas são realizadas com base nas <strong>palavras-chave</strong> que você cadastrar aqui.
+                      Use termos quebrados e específicos para encontrar vagas mais relevantes.
+                    </p>
+                    <div className="space-y-1.5 pt-2">
+                      <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                        Exemplos de palavras-chave:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {exampleKeywords.map((example) => (
+                          <Badge
+                            key={example}
+                            variant="secondary"
+                            className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-1 rounded-md border-none"
+                          >
+                            {example}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                value={newSkill}
-                onChange={(event) => setNewSkill(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    handleAddSkill();
+              {/* Keywords Input Area */}
+              <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+                {/* Keywords Tags */}
+                {keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {keywords.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 py-2 px-3 rounded-lg flex gap-1.5 items-center border-none cursor-pointer transition-opacity hover:opacity-80 text-sm font-medium"
+                      >
+                        {tag}
+                        <button
+                          className="inline-flex"
+                          onClick={() => handleRemoveKeyword(tag)}
+                          aria-label={`Remover ${tag}`}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {/* Input */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    value={newKeyword}
+                    onChange={(event) => setNewKeyword(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        handleAddKeyword();
+                      }
+                    }}
+                    placeholder='Ex: "Técnico Informática", "Suporte N1", "React"'
+                    className="flex-1"
+                  />
+                  <Button variant="outline" onClick={handleAddKeyword}>
+                    Adicionar
+                  </Button>
+                </div>
+              </div>
+            </section>
+
+            {/* Level Section */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">
+                  Senioridade <span className="text-red-500">*</span>
+                </label>
+              </div>
+              <Select
+                value={level}
+                onValueChange={(value) => {
+                  if (value) {
+                    setLevel(value);
                   }
                 }}
-                placeholder="Digite uma skill e pressione Enter"
-              />
-              <Button variant="outline" onClick={handleAddSkill}>
-                Adicionar
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Selecione a senioridade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Junior">Junior</SelectItem>
+                  <SelectItem value="Pleno">Pleno</SelectItem>
+                  <SelectItem value="Senior">Senior</SelectItem>
+                  <SelectItem value="Especialista">Especialista</SelectItem>
+                </SelectContent>
+              </Select>
+            </section>
+
+            {/* Message */}
+            {message && (
+              <div
+                className={`flex items-center gap-3 p-4 rounded-xl border ${
+                  message.type === "success"
+                    ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                    : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
+                }`}
+              >
+                {message.type === "success" ? (
+                  <CheckCircle className="w-5 h-5 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                )}
+                <p className="text-sm font-medium">{message.text}</p>
+              </div>
+            )}
+
+            {/* Footer Buttons */}
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (originalPreferences) {
+                    setKeywords(originalPreferences.skills);
+                    setLevel(originalPreferences.level);
+                  }
+                  setMessage(null);
+                }}
+                disabled={!hasChanges}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={() => void handleSave()} disabled={saving || !hasChanges}>
+                {saving ? (
+                  <>
+                    <LoaderCircle className="w-4 h-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar Preferências"
+                )}
               </Button>
             </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Senioridade</label>
-            <Select
-              value={level}
-              onValueChange={(value) => {
-                if (value) {
-                  setLevel(value);
-                }
-              }}
-            >
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Junior">Junior</SelectItem>
-                <SelectItem value="Pleno">Pleno</SelectItem>
-                <SelectItem value="Senior">Senior</SelectItem>
-                <SelectItem value="Especialista">Especialista</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Área de atuação</label>
-            <div className="relative">
-              <BriefcaseBusiness className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                value={area}
-                onChange={(event) => setArea(event.target.value)}
-                placeholder="Ex: Desenvolvimento Backend"
-                className="pl-9"
-              />
-            </div>
-          </div>
-        </section>
-
-        {message && (
-          <div
-            className={`flex items-center gap-3 p-4 rounded-xl border ${
-              message.type === "success"
-                ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
-            }`}
-          >
-            {message.type === "success" ? (
-              <CheckCircle className="w-5 h-5 shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 shrink-0" />
-            )}
-            <p className="text-sm font-medium">{message.text}</p>
-          </div>
+          </>
         )}
-
-        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (originalPreferences) {
-                setSkills(originalPreferences.skills);
-                setArea(originalPreferences.area);
-                setLevel(originalPreferences.level);
-              }
-              setMessage(null);
-            }}
-            disabled={!hasChanges}
-          >
-            Cancelar
-          </Button>
-          <Button onClick={() => void handleSave()} disabled={saving || !hasChanges}>
-            {saving ? (
-              <>
-                <LoaderCircle className="w-4 h-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              "Salvar Preferências"
-            )}
-          </Button>
-        </div>
-      </>
-    )}
-  </div>
-</DashboardLayout>
-);
+      </div>
+    </DashboardLayout>
+  );
 }
