@@ -85,10 +85,29 @@ export interface UploadCvResponse {
   url: string;
 }
 
+export interface UserCvResponse {
+  blob: Blob;
+  fileName: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
+export interface GeneratedCvItem {
+  id: string;
+  urlFile: string;
+  createdAt: string;
+  fileName: string;
+}
+
 export interface GenerateCvResponse {
   blob: Blob;
   fileName: string;
   storageUrl: string | null;
+}
+
+export interface GeneratedCvListResponse {
+  items: GeneratedCvItem[];
+  total: number;
 }
 
 export class ApiError extends Error {
@@ -170,6 +189,46 @@ export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   });
 
   return response.data;
+}
+
+export async function getUserCv(): Promise<UserCvResponse> {
+  const response = await api.get("/api/users/cv", { responseType: "blob" });
+
+  const blob = response.data as Blob;
+  const fileNameFromHeader = response.headers["x-cv-file-name"] as string | undefined;
+  const fileSizeFromHeader = response.headers["x-cv-file-size-bytes"] as string | undefined;
+  const uploadDateFromHeader = response.headers["x-cv-upload-date"] as string | undefined;
+  const contentLength = response.headers["content-length"] as string | undefined;
+
+  const fileName =
+    fileNameFromHeader ??
+    getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+    "curriculo.pdf";
+  const fileSize = Number.parseInt(fileSizeFromHeader ?? contentLength ?? "", 10);
+  const uploadedAt = uploadDateFromHeader ?? "";
+
+  return {
+    blob,
+    fileName,
+    fileSize: Number.isNaN(fileSize) ? blob.size : fileSize,
+    uploadedAt,
+  };
+}
+
+export async function getGeneratedCvs(): Promise<GeneratedCvListResponse> {
+  const response = await api.get<GeneratedCvListResponse>("/api/users/generated-cvs");
+  return response.data;
+}
+
+export async function downloadGeneratedCv(id: string): Promise<{ blob: Blob; fileName: string }> {
+  const response = await api.get(`/api/users/generated-cvs/${id}`, { responseType: "blob" });
+
+  const blob = response.data as Blob;
+  const fileName =
+    getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+    `curriculo-gerado-${id}.pdf`;
+
+  return { blob, fileName };
 }
 
 export async function generateCvForJob(jobId: string): Promise<GenerateCvResponse> {
