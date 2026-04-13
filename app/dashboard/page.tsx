@@ -35,34 +35,34 @@ export default function DashboardPage() {
   const [recentApps, setRecentApps] = useState<RecentJob[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
 
-  useEffect(() => {
-    const fetchRecentJobs = async () => {
-      setLoadingJobs(true);
-      try {
-        const response = await getJobs({ page: 1, pageSize: 5 });
-        const fallbackJobs = (response as { data?: JobListItem[] }).data;
-        const recentJobs = Array.isArray(response?.items)
-          ? response.items
-          : Array.isArray(fallbackJobs)
-          ? fallbackJobs
-          : [];
-        const mappedJobs: RecentJob[] = recentJobs.map((job) => ({
-          ...job,
-          company: "Empresa",
-          platform: "LinkedIn",
-          date: "Recente",
-          status: job.isApplied ? "Aplicada" : "Pulada",
-        }));
-        setRecentApps(mappedJobs);
-      } catch (err) {
-        console.error("Erro ao buscar vagas recentes:", err);
-      } finally {
-        setLoadingJobs(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchRecentJobs = async () => {
+  //     setLoadingJobs(true);
+  //     try {
+  //       const response = await getJobs({ page: 1, pageSize: 5 });
+  //       const fallbackJobs = (response as { data?: JobListItem[] }).data;
+  //       const recentJobs = Array.isArray(response?.items)
+  //         ? response.items
+  //         : Array.isArray(fallbackJobs)
+  //         ? fallbackJobs
+  //         : [];
+  //       const mappedJobs: RecentJob[] = recentJobs.map((job) => ({
+  //         ...job,
+  //         company: "Empresa",
+  //         platform: "LinkedIn",
+  //         date: "Recente",
+  //         status: job.isApplied ? "Aplicada" : "Pulada",
+  //       }));
+  //       setRecentApps(mappedJobs);
+  //     } catch (err) {
+  //       console.error("Erro ao buscar vagas recentes:", err);
+  //     } finally {
+  //       setLoadingJobs(false);
+  //     }
+  //   };
 
-    fetchRecentJobs();
-  }, []);
+  //   fetchRecentJobs();
+  // }, []);
 
   if (isLoading) {
     return (
