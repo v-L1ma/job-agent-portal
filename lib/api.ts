@@ -46,6 +46,7 @@ export interface JobListItem {
   description: string;
   url: string;
   isApplied: boolean;
+  platform?:string;
 }
 
 export interface PagedJobsResponse {
