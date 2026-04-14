@@ -1,10 +1,5 @@
 import api from "@/lib/axios-instance";
-import {
-  clearStoredTokens,
-  getStoredTokens,
-  setStoredTokens,
-  type StoredAuthTokens,
-} from "@/lib/auth-storage";
+import { isAxiosError } from "axios";
 
 interface ProblemDetails {
   title?: string;
@@ -134,19 +129,53 @@ function getFileNameFromContentDisposition(headerValue: string | null): string |
   return decodeURIComponent(match[1].replace(/\"/g, "")).trim();
 }
 
+function toApiError(error: unknown, fallbackMessage: string): ApiError {
+  if (isAxiosError(error)) {
+    const problem = error.response?.data as ProblemDetails | undefined;
+    const message =
+      (typeof problem?.detail === "string" && problem.detail) ||
+      (typeof problem?.title === "string" && problem.title) ||
+      fallbackMessage;
+
+    return new ApiError(message, error.response?.status ?? 500);
+  }
+
+  if (error instanceof ApiError) {
+    return error;
+  }
+
+  if (error instanceof Error && error.message) {
+    return new ApiError(error.message, 500);
+  }
+
+  return new ApiError(fallbackMessage, 500);
+}
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await api.post<LoginResponse>("/api/auth/login", payload);
-  return response.data;
+  try {
+    const response = await api.post<LoginResponse>("/api/auth/login", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Nao foi possivel realizar login.");
+  }
 }
 
 export async function register(payload: RegisterPayload): Promise<string> {
-  const response = await api.post<string>("/api/auth/register", payload);
-  return response.data;
+  try {
+    const response = await api.post<string>("/api/auth/register", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Nao foi possivel concluir o cadastro.");
+  }
 }
 
 export async function forgotPassword(payload: ForgotPasswordPayload): Promise<string> {
-  const response = await api.post<string>("/api/auth/forgot-password", payload);
-  return response.data;
+  try {
+    const response = await api.post<string>("/api/auth/forgot-password", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Nao foi possivel enviar o link de recuperacao.");
+  }
 }
 
 export async function getJobs(query: JobsQuery): Promise<PagedJobsResponse> {
