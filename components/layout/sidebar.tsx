@@ -29,7 +29,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     { name: "Vagas", href: "/vagas", icon: Briefcase },
     { name: "Currículo", href: "/curriculo", icon: FileText },
     { name: "Preferências", href: "/preferencias", icon: SlidersHorizontal },
-    { name: "Plataformas", href: "/plataformas", icon: Globe },
   ];
 
   return (
