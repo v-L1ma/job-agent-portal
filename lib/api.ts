@@ -156,7 +156,7 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>("/api/auth/login", payload);
     return response.data;
   } catch (error) {
-    throw toApiError(error, "Nao foi possivel realizar login.");
+    throw toApiError(error, "Não foi possível realizar o login.");
   }
 }
 
@@ -165,7 +165,7 @@ export async function register(payload: RegisterPayload): Promise<string> {
     const response = await api.post<string>("/api/auth/register", payload);
     return response.data;
   } catch (error) {
-    throw toApiError(error, "Nao foi possivel concluir o cadastro.");
+    throw toApiError(error, "Não foi possível concluir o cadastro.");
   }
 }
 
@@ -174,20 +174,28 @@ export async function forgotPassword(payload: ForgotPasswordPayload): Promise<st
     const response = await api.post<string>("/api/auth/forgot-password", payload);
     return response.data;
   } catch (error) {
-    throw toApiError(error, "Nao foi possivel enviar o link de recuperacao.");
+    throw toApiError(error, "Não foi possível enviar o link de recuperação.");
   }
 }
 
 export async function getJobs(query: JobsQuery): Promise<PagedJobsResponse> {
-  const response = await api.get<PagedJobsResponse>("/api/jobs/search", {
-    params: query,
-  });
-  return response.data;
+  try {
+    const response = await api.get<PagedJobsResponse>("/api/jobs/search", {
+      params: query,
+    });
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível buscar as vagas.");
+  }
 }
 
 export async function getJobById(id: string): Promise<JobDetailsResponse> {
-  const response = await api.get<JobDetailsResponse>(`/api/jobs/${id}`);
-  return response.data;
+  try {
+    const response = await api.get<JobDetailsResponse>(`/api/jobs/${id}`);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar os detalhes da vaga.");
+  }
 }
 
 export interface UserPreferencesResponse {
@@ -197,84 +205,111 @@ export interface UserPreferencesResponse {
 }
 
 export async function getUserPreferences(): Promise<UserPreferencesResponse> {
-  const response = await api.get<UserPreferencesResponse>("/api/users/preferences");
-  return response.data;
+  try {
+    const response = await api.get<UserPreferencesResponse>("/api/users/preferences");
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar suas preferências.");
+  }
 }
 
 export async function saveUserPreferences(
   payload: SavePreferencesPayload
 ): Promise<SavePreferencesResponse> {
-  const response = await api.post<SavePreferencesResponse>("/api/users/preferences", payload);
-  return response.data;
+  try {
+    const response = await api.post<SavePreferencesResponse>("/api/users/preferences", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível salvar suas preferências.");
+  }
 }
 
 export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await api.post<UploadCvResponse>("/api/users/cv", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  return response.data;
+  try{
+    const response = await api.post<UploadCvResponse>("/api/users/cv", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  }catch(error){
+    throw toApiError(error, "Erro ao fazer upload do cúrriculo")
+  }
 }
 
 export async function getUserCv(): Promise<UserCvResponse> {
-  const response = await api.get("/api/users/cv", { responseType: "blob" });
+  try {
+    const response = await api.get("/api/users/cv", { responseType: "blob" });
 
-  const blob = response.data as Blob;
-  const fileNameFromHeader = response.headers["x-cv-file-name"] as string | undefined;
-  const fileSizeFromHeader = response.headers["x-cv-file-size-bytes"] as string | undefined;
-  const uploadDateFromHeader = response.headers["x-cv-upload-date"] as string | undefined;
-  const contentLength = response.headers["content-length"] as string | undefined;
+    const blob = response.data as Blob;
+    const fileNameFromHeader = response.headers["x-cv-file-name"] as string | undefined;
+    const fileSizeFromHeader = response.headers["x-cv-file-size-bytes"] as string | undefined;
+    const uploadDateFromHeader = response.headers["x-cv-upload-date"] as string | undefined;
+    const contentLength = response.headers["content-length"] as string | undefined;
 
-  const fileName =
-    fileNameFromHeader ??
-    getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
-    "curriculo.pdf";
-  const fileSize = Number.parseInt(fileSizeFromHeader ?? contentLength ?? "", 10);
-  const uploadedAt = uploadDateFromHeader ?? "";
+    const fileName =
+      fileNameFromHeader ??
+      getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+      "curriculo.pdf";
+    const fileSize = Number.parseInt(fileSizeFromHeader ?? contentLength ?? "", 10);
+    const uploadedAt = uploadDateFromHeader ?? "";
 
-  return {
-    blob,
-    fileName,
-    fileSize: Number.isNaN(fileSize) ? blob.size : fileSize,
-    uploadedAt,
-  };
+    return {
+      blob,
+      fileName,
+      fileSize: Number.isNaN(fileSize) ? blob.size : fileSize,
+      uploadedAt,
+    };
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar seu currículo.");
+  }
 }
 
 export async function getGeneratedCvs(): Promise<GeneratedCvListResponse> {
-  const response = await api.get<GeneratedCvListResponse>("/api/users/generated-cvs");
-  return response.data;
+  try {
+    const response = await api.get<GeneratedCvListResponse>("/api/users/generated-cvs");
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar a lista de currículos gerados.");
+  }
 }
 
 export async function downloadGeneratedCv(id: string): Promise<{ blob: Blob; fileName: string }> {
-  const response = await api.get(`/api/users/generated-cvs/${id}`, { responseType: "blob" });
+  try {
+    const response = await api.get(`/api/users/generated-cvs/${id}`, { responseType: "blob" });
 
-  const blob = response.data as Blob;
-  const fileName =
-    getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
-    `curriculo-gerado-${id}.pdf`;
+    const blob = response.data as Blob;
+    const fileName =
+      getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+      `curriculo-gerado-${id}.pdf`;
 
-  return { blob, fileName };
+    return { blob, fileName };
+  } catch (error) {
+    throw toApiError(error, "Não foi possível baixar o currículo gerado.");
+  }
 }
 
 export async function generateCvForJob(jobId: string): Promise<GenerateCvResponse> {
-  const response = await api.post("/api/users/cv/generate", { jobId }, { responseType: "blob" });
+  try {
+    const response = await api.post("/api/users/cv/generate", { jobId }, { responseType: "blob" });
 
-  const blob = response.data as Blob;
-  const fileName =
-    getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
-    "curriculo-personalizado.pdf";
-  const storageUrl = response.headers["x-generated-cv-url"];
+    const blob = response.data as Blob;
+    const fileName =
+      getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+      "curriculo-personalizado.pdf";
+    const storageUrl = response.headers["x-generated-cv-url"];
 
-  return {
-    blob,
-    fileName,
-    storageUrl,
-  };
+    return {
+      blob,
+      fileName,
+      storageUrl,
+    };
+  } catch (error) {
+    throw toApiError(error, "Não foi possível gerar o currículo para esta vaga.");
+  }
 }
 
 export interface EvaluateJobPayload {
@@ -283,5 +318,9 @@ export interface EvaluateJobPayload {
 }
 
 export async function evaluateJob(id: string, payload: EvaluateJobPayload): Promise<void> {
-  await api.post(`/api/jobs/${id}/evaluate`, payload);
+  try {
+    await api.post(`/api/jobs/${id}/evaluate`, payload);
+  } catch (error) {
+    throw toApiError(error, "Não foi possível enviar sua avaliação.");
+  }
 }
