@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, CheckCircle, LoaderCircle, AlertCircle, Search, Lightbulb } from "lucide-react";
 import { ApiError, saveUserPreferences, getUserPreferences } from "@/lib/api";
 import { useAuth } from "@/components/providers/auth-provider";
+
+const preferencesSchema = z.object({
+  skills: z.array(z.string()).min(1, "Adicione pelo menos uma palavra-chave."),
+  level: z.string().min(1, "Selecione uma senioridade."),
+});
+
+type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 
 function normalizeError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -27,12 +37,27 @@ export default function PreferencesPage() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const [keywords, setKeywords] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState("");
-  const [level, setLevel] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  const {
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<PreferencesFormValues>({
+    resolver: zodResolver(preferencesSchema),
+    defaultValues: {
+      skills: [],
+      level: "",
+    },
+  });
+
+  const keywords = watch("skills");
+  const level = watch("level");
 
   // Estado para armazenar as preferências originais
   const [originalPreferences, setOriginalPreferences] = useState<{
@@ -54,8 +79,10 @@ export default function PreferencesPage() {
     async function loadPreferences() {
       try {
         const data = await getUserPreferences();
-        setKeywords(data.skills);
-        setLevel(data.level);
+        reset({
+          skills: data.skills,
+          level: data.level,
+        });
 
         // Armazena as preferências originais para comparação e reversão
         setOriginalPreferences({
@@ -69,11 +96,27 @@ export default function PreferencesPage() {
       }
     }
     loadPreferences();
-  }, []);
+  }, [reset]);
 
   const handleAddKeyword = () => {
     const value = newKeyword.trim();
     if (!value) {
+      return;
+    }
+
+    if (value.length > 30) {
+      setMessage({
+        text: "A palavra-chave deve ter no máximo 30 caracteres.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (keywords.length >= 5) {
+      setMessage({
+        text: "Você pode adicionar no máximo 5 palavras-chave.",
+        type: "error",
+      });
       return;
     }
 
@@ -83,45 +126,33 @@ export default function PreferencesPage() {
       return;
     }
 
-    setKeywords((current) => [...current, value]);
+    setValue("skills", [...keywords, value], { shouldValidate: true });
     setNewKeyword("");
   };
 
   const handleRemoveKeyword = (value: string) => {
-    setKeywords((current) => current.filter((item) => item !== value));
+    setValue(
+      "skills",
+      keywords.filter((item) => item !== value),
+      { shouldValidate: true }
+    );
   };
 
-  const handleSave = async () => {
-    if (!keywords.length) {
-      setMessage({
-        text: "Adicione pelo menos uma palavra-chave para salvar suas preferências.",
-        type: "error",
-      });
-      return;
-    }
-
-    if (!level) {
-      setMessage({
-        text: "Selecione uma senioridade obrigatória.",
-        type: "error",
-      });
-      return;
-    }
-
+  const onSave = async (data: PreferencesFormValues) => {
     try {
       setSaving(true);
       setMessage(null);
 
       await saveUserPreferences({
-        skills: keywords,
-        level,
+        skills: data.skills,
+        level: data.level,
         area: "",
       });
 
       // Atualiza as preferências originais após salvar com sucesso
       setOriginalPreferences({
-        skills: keywords,
-        level,
+        skills: data.skills,
+        level: data.level,
       });
 
       setMessage({ text: "Preferências salvas com sucesso!", type: "success" });
@@ -198,42 +229,57 @@ export default function PreferencesPage() {
               {/* Keywords Input Area */}
               <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
                 {/* Keywords Tags */}
-                {keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {keywords.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 py-2 px-3 rounded-lg flex gap-1.5 items-center border-none cursor-pointer transition-opacity hover:opacity-80 text-sm font-medium"
-                      >
-                        {tag}
-                        <button
-                          className="inline-flex"
-                          onClick={() => handleRemoveKeyword(tag)}
-                          aria-label={`Remover ${tag}`}
+                <div className="flex justify-between items-start mb-4 flex-wrap">
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {keywords.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 py-2 px-3 rounded-lg flex gap-1.5 items-center border-none cursor-pointer transition-opacity hover:opacity-80 text-sm font-medium h-auto"
                         >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </Badge>
-                    ))}
+                          <span className="break-all whitespace-normal">{tag}</span>
+                          <button
+                            className="inline-flex"
+                            onClick={() => handleRemoveKeyword(tag)}
+                            aria-label={`Remover ${tag}`}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <div>
+                    {keywords.length ?? 0} / 5
                   </div>
-                )}
+                </div>
 
-                {/* Input */}
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    value={newKeyword}
-                    onChange={(event) => setNewKeyword(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        handleAddKeyword();
-                      }
-                    }}
-                    placeholder='Ex: "Técnico Informática", "Suporte N1", "React"'
-                    className="flex-1"
-                  />
-                  <Button variant="outline" onClick={handleAddKeyword}>
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      value={newKeyword}
+                      onChange={(event) => setNewKeyword(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          handleAddKeyword();
+                        }
+                      }}
+                      placeholder='Ex: "Técnico Informática", "Suporte N1", "React"'
+                      className={newKeyword.length > 30 ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      disabled={keywords.length >= 5}
+                    />
+                    <div className="flex justify-between px-1">
+                      <p className={`text-[10px] uppercase font-bold tracking-wider ${newKeyword.length > 30 ? "text-red-500" : "text-slate-400"}`}>
+                        {newKeyword.length > 30 ? "Limite excedido" : "Máximo 30 caracteres"}
+                      </p>
+                      <p className={`text-[10px] font-mono ${newKeyword.length > 30 ? "text-red-500" : "text-slate-400"}`}>
+                        {newKeyword.length}/30
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={handleAddKeyword} disabled={keywords.length >= 5 || newKeyword.length > 30}>
                     Adicionar
                   </Button>
                 </div>
@@ -251,7 +297,7 @@ export default function PreferencesPage() {
                 value={level}
                 onValueChange={(value) => {
                   if (value) {
-                    setLevel(value);
+                    setValue("level", value, { shouldValidate: true });
                   }
                 }}
               >
@@ -265,7 +311,18 @@ export default function PreferencesPage() {
                   <SelectItem value="Especialista">Especialista</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.level && (
+                <p className="text-xs text-red-500 font-medium">{errors.level.message}</p>
+              )}
             </section>
+
+            {/* Error Message from Zod Array */}
+            {errors.skills && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p className="text-sm font-medium">{errors.skills.message}</p>
+              </div>
+            )}
 
             {/* Message */}
             {message && (
@@ -291,8 +348,10 @@ export default function PreferencesPage() {
                 variant="ghost"
                 onClick={() => {
                   if (originalPreferences) {
-                    setKeywords(originalPreferences.skills);
-                    setLevel(originalPreferences.level);
+                    reset({
+                      skills: originalPreferences.skills,
+                      level: originalPreferences.level,
+                    });
                   }
                   setMessage(null);
                 }}
@@ -300,7 +359,7 @@ export default function PreferencesPage() {
               >
                 Cancelar
               </Button>
-              <Button onClick={() => void handleSave()} disabled={saving || !hasChanges}>
+              <Button onClick={handleSubmit(onSave)} disabled={saving || !hasChanges}>
                 {saving ? (
                   <>
                     <LoaderCircle className="w-4 h-4 animate-spin" />
