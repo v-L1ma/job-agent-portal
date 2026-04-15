@@ -369,7 +369,7 @@ export default function ApplicationsPage() {
                         <div className="space-y-2 mb-3 relative pr-8">
                           <div className="absolute top-0 right-0">
                             <DropdownMenu>
-                              <DropdownMenuTrigger className="h-8 w-8 text-slate-800 hover:text-slate-500 dark:hover:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
+                              <DropdownMenuTrigger className="h-8 w-8 text-slate-800 hover:text-slate-500 dark:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
                                 <MoreVertical className="w-4 h-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-fit p-1">
