@@ -23,6 +23,21 @@ export interface RegisterPayload {
   role: string;
 }
 
+export interface UpdateUserProfilePayload {
+  name?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  confirmNewPassword?: string;
+}
+
+export interface GetUserProfileResponse {
+  id: string;
+  name: string;
+  email: string;
+  cpf?: string;
+}
+
 export interface LoginResponse {
   token: string;
   refreshToken: string;
@@ -175,6 +190,23 @@ export async function forgotPassword(payload: ForgotPasswordPayload): Promise<st
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível enviar o link de recuperação.");
+  }
+}
+
+export async function getUserProfile(): Promise<GetUserProfileResponse> {
+  try {
+    const response = await api.get<GetUserProfileResponse>("/api/users/profile");
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar seu perfil.");
+  }
+}
+
+export async function updateUserProfile(payload: UpdateUserProfilePayload): Promise<void> {
+  try {
+    await api.patch("/api/users/profile", payload);
+  } catch (error) {
+    throw toApiError(error, "Não foi possível atualizar seu perfil.");
   }
 }
 
