@@ -99,7 +99,7 @@ export default function RegisterPage() {
                   bolt
                 </span>
               </div>
-              <span className="text-xl font-bold tracking-tight text-primary">AutoApply</span>
+              <span className="text-xl font-bold tracking-tight text-primary">BuscaVagas</span>
             </div>
             <h1 className="text-3xl font-bold text-on-surface tracking-tight mb-2">Crie sua conta</h1>
             <p className="text-on-surface-variant text-sm">

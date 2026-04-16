@@ -56,7 +56,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
         {!isCollapsed && (
           <div className="animate-in fade-in slide-in-from-left-2 duration-300 overflow-hidden">
-            <h1 className="text-lg font-bold leading-tight truncate">AutoApply</h1>
+            <h1 className="text-lg font-bold leading-tight truncate">BuscaVagas</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
               Gerenciador de Vagas
             </p>

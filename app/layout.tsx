@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AutoApply Dashboard",
+  title: "Busca Vagas",
   description: "Gestão de Carreira e Vagas Automatizadas",
 };
 

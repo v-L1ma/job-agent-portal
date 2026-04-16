@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
               >
                 auto_awesome
               </span>
-              AutoApply
+              BuscaVagas
             </span>
           </div>
 
@@ -161,7 +161,7 @@ export default function ForgotPasswordPage() {
                 Sua seguranca e nossa prioridade absoluta.
               </h2>
               <p className="text-on-surface-variant text-base leading-relaxed">
-                Utilizamos criptografia de ponta a ponta e protocolos de autenticacao avancados para garantir que sua jornada no AutoApply seja protegida em cada etapa.
+                Utilizamos criptografia de ponta a ponta e protocolos de autenticacao avancados para garantir que sua jornada no BuscaVagas seja protegida em cada etapa.
               </p>
               <div className="mt-8 flex gap-4">
                 <div className="h-1 w-12 bg-primary rounded-full"></div>

@@ -5,7 +5,7 @@ export default function LandingPage() {
     <>
       <header className="fixed top-0 z-50 w-full border-b border-indigo-500/20 bg-[#121121]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <div className="text-xl font-bold tracking-tighter text-surface-tint">AutoApply</div>
+          <div className="text-xl font-bold tracking-tighter text-surface-tint">BuscaVagas</div>
           <nav className="hidden gap-8 text-sm font-medium tracking-tight md:flex">
             <a className="text-slate-400 transition-colors hover:text-white" href="#funcionalidades">
               Funcionalidades
@@ -160,7 +160,7 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                 </div>
                 <p className="mb-8 grow text-sm italic text-on-surface-variant">
-                  Em 2 semanas consegui 5 entrevistas reais. O AutoApply limpou o processo de busca e me permitiu focar apenas em estudar para os algoritmos.
+                  Em 2 semanas consegui 5 entrevistas reais. O BuscaVagas limpou o processo de busca e me permitiu focar apenas em estudar para os algoritmos.
                 </p>
                 <div className="flex items-center gap-4">
                   <img alt="Foto de Ricardo Silva" className="h-10 w-10 rounded-full border-2 border-primary/30" src="/stitch/img-10.jpg" />
@@ -281,7 +281,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-indigo-500/20 bg-[#121121]">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-8 py-12 md:flex-row">
-          <div className="text-lg font-black text-indigo-500">AutoApply</div>
+          <div className="text-lg font-black text-indigo-500">BuscaVagas</div>
           <div className="flex flex-wrap justify-center gap-6 text-[12px] font-medium uppercase tracking-[0.05em]">
             <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#funcionalidades">Funcionalidades</a>
             <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#precos">Precos</a>
@@ -289,7 +289,7 @@ export default function LandingPage() {
             <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/login">Entrar</Link>
             <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/register">Cadastro</Link>
           </div>
-          <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-slate-500">© 2024 AutoApply. Todos os direitos reservados.</div>
+          <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-slate-500">© 2024 BuscaVagas. Todos os direitos reservados.</div>
         </div>
       </footer>
     </>

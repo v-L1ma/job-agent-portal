@@ -81,7 +81,7 @@ export default function LoginPage() {
                   bolt
                 </span>
               </div>
-              <span className="text-xl font-bold tracking-tight text-primary">AutoApply</span>
+              <span className="text-xl font-bold tracking-tight text-primary">BuscaVagas</span>
             </div>
             <h1 className="text-3xl font-bold text-on-surface mb-2">Bem-vindo de volta</h1>
             <p className="text-on-surface-variant text-sm">
@@ -240,7 +240,7 @@ export default function LoginPage() {
               </span>
             </div>
             <blockquote className="text-xl font-medium text-white mb-6 leading-relaxed italic">
-              &quot;O AutoApply transformou minha busca por emprego. As recomendacoes baseadas em dados sao precisas e me economizam horas todos os dias.&quot;
+              &quot;O BuscaVagas transformou minha busca por emprego. As recomendacoes baseadas em dados sao precisas e me economizam horas todos os dias.&quot;
             </blockquote>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary">
