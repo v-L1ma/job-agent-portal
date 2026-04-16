@@ -48,7 +48,7 @@ export function useJobSearch(): UseJobSearchResult {
 
       const poll = async (attempts: number = 1): Promise<void> => {
         const maxAttempts = 5;
-        const basePollingInterval = 1000;
+        const basePollingInterval = 10000;
 
         const stopPollingSilently = () => {
           setIsLoading(false);
