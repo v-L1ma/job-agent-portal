@@ -1,6 +1,10 @@
+"use client";
+
+import { useHealthCheck } from '@/hooks/use-health';
 import Link from 'next/link';
 
 export default function LandingPage() {
+  useHealthCheck();
   return (
     <>
       <header className="fixed top-0 z-50 w-full border-b border-indigo-500/20 bg-[#121121]">
@@ -147,7 +151,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="depoimentos" className="px-6 py-24">
+        {/* <section id="depoimentos" className="px-6 py-24">
           <div className="mx-auto max-w-7xl">
             <h2 className="mb-16 text-center text-3xl font-bold">O que dizem os talentos</h2>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -212,7 +216,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section id="precos" className="bg-surface-container-low px-6 py-24">
           <div className="mx-auto max-w-7xl">
