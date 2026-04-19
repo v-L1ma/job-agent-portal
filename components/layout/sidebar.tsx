@@ -32,23 +32,34 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   ];
 
   return (
-    <aside
-      className={cn(
-        "border-r border-slate-200 dark:border-primary/20 bg-white dark:bg-slate-950 flex flex-col shrink-0 h-full transition-all duration-300 ease-in-out relative",
-        isCollapsed ? "w-20" : "w-64"
+    <>
+      {/* Overlay to close sidebar on mobile */}
+      {!isCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={onToggle}
+          aria-hidden="true"
+        />
       )}
-    >
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-20 w-6 h-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-primary/20 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors z-50 text-slate-400 hover:text-primary"
-        aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="w-4 h-4" />
-        ) : (
-          <ChevronLeft className="w-4 h-4" />
+
+      <aside
+        className={cn(
+          "border-r border-slate-200 dark:border-primary/20 bg-white dark:bg-slate-950 flex flex-col shrink-0 h-full transition-all duration-300 ease-in-out relative",
+          "fixed inset-y-0 left-0 z-50 md:relative",
+          isCollapsed ? "-translate-x-full md:translate-x-0 md:w-20" : "translate-x-0 w-64"
         )}
-      </button>
+      >
+        <button
+          onClick={onToggle}
+          className="absolute -right-3 top-20 w-6 h-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-primary/20 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors z-50 text-slate-400 hover:text-primary md:flex"
+          aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
 
       <div className={cn("p-6 flex items-center gap-3", isCollapsed && "justify-center px-0")}>
         <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shrink-0">
@@ -113,5 +124,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         )}
       </div>
     </aside>
+    </>
   );
 }

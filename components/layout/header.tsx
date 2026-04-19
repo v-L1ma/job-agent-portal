@@ -40,7 +40,7 @@ export function Header({ title, onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-primary/20 bg-white dark:bg-slate-950 flex items-center justify-between px-8 shrink-0">
+    <header className="h-16 border-b border-slate-200 dark:border-primary/20 bg-white dark:bg-slate-950 flex items-center justify-between px-4 md:px-8 shrink-0">
       <div className="flex items-center gap-4">
         {onToggleSidebar && (
           <button
@@ -51,7 +51,7 @@ export function Header({ title, onToggleSidebar }: HeaderProps) {
             <Menu className="w-5 h-5" />
           </button>
         )}
-        <h2 className="text-xl font-bold">{title}</h2>
+        <h2 className="text-xl font-bold truncate max-w-[200px] md:max-w-none">{title}</h2>
       </div>
       <div className="flex items-center gap-4">
         <button className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-primary/10 text-slate-600 dark:text-slate-300 relative transition-colors hover:bg-slate-200 dark:hover:bg-primary/20">
