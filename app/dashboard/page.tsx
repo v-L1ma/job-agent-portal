@@ -185,17 +185,31 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="font-bold">Candidaturas por dia</CardTitle>
           </CardHeader>
-          <CardContent className="h-[240px] flex items-end justify-between gap-1">
+          <CardContent className="h-[240px] flex items-end justify-between gap-3 pt-6 pb-2">
             {statistics?.applicationsByDay.data.slice(-7).map((day, i) => (
               <div
                 key={i}
-                className="flex-1 bg-primary/20 hover:bg-primary transition-colors rounded-t"
-                style={{
-                  height: `${(day.count / maxDayCount) * 100}%`,
-                  minHeight: "4%",
-                }}
-                title={`${day.count} candidaturas`}
-              />
+                className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
+              >
+                <div className="relative flex flex-col items-center w-full h-full justify-end">
+                  <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] py-0.5 px-1.5 rounded pointer-events-none whitespace-nowrap z-10">
+                    {day.count}
+                  </div>
+                  <div
+                    className="w-full bg-primary/20 group-hover:bg-primary transition-colors rounded-t"
+                    style={{
+                      height: `${(day.count / maxDayCount) * 100}%`,
+                      minHeight: "4%",
+                    }}
+                  />
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                  {new Date(day.date).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                  })}
+                </div>
+              </div>
             ))}
           </CardContent>
         </Card>
