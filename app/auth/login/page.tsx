@@ -125,7 +125,7 @@ export default function LoginPage() {
                   Senha
                 </Label>
                 <Link
-                  className="text-xs font-semibold text-primary hover:underline transition-all"
+                  className="text-xs font-semibold text-primary hover:underline transition-all dark:text-white"
                   href="/auth/forgot-password"
                 >
                   Esqueci minha senha
@@ -207,7 +207,7 @@ export default function LoginPage() {
 
           <p className="mt-10 text-center text-sm text-on-surface-variant">
             Nao tem uma conta?{" "}
-            <Link className="text-primary font-bold hover:underline" href="/auth/register">
+            <Link className="text-primary font-bold hover:underline dark:text-white" href="/auth/register">
                 Cadastrar-se
             </Link>
           </p>

@@ -220,11 +220,11 @@ export default function RegisterPage() {
                   <Switch checked={field.value} id="terms" onCheckedChange={field.onChange} />
                   <Label className="text-xs text-on-surface-variant leading-relaxed cursor-pointer" htmlFor="terms">
                     Ao criar uma conta, voce concorda com nossos{" "}
-                    <Link className="text-primary hover:underline" href="/">
+                    <Link className="text-primary dark:text-white hover:underline" href="/">
                       Termos de Servico
                     </Link>{" "}
                     e{" "}
-                    <Link className="text-primary hover:underline" href="/">
+                    <Link className="text-primary dark:text-white hover:underline" href="/">
                       Politica de Privacidade
                     </Link>
                     .
@@ -248,8 +248,8 @@ export default function RegisterPage() {
 
           <div className="mt-8 text-center">
             <p className="text-on-surface-variant text-sm">
-              Ja tem uma conta?
-              <Link className="text-primary font-semibold hover:underline ml-1" href="/auth/login">
+              Já tem uma conta?
+              <Link className="text-primary font-semibold hover:underline ml-1 dark:text-white" href="/auth/login">
                 Entre
               </Link>
             </p>
