@@ -80,13 +80,13 @@ export default function LandingPage() {
             <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
               <Image
                 alt="Preview do dashboard de candidaturas"
-                className="h-auto w-full opacity-80"
-                height={900}
+                className="h-auto w-full"
+                height={633}
                 priority
                 fetchPriority="high"
-                sizes="(min-width: 1280px) 1120px, 100vw"
-                src="/assets/preview (1) (2).webp"
-                width={1600}
+                sizes="(min-width: 1280px) 1120px, (min-width: 768px) 80vw, 95vw"
+                src="/assets/preview%20(1)%20(2).webp"
+                width={1278}
               />
               <div className="absolute left-0 top-0 h-full w-full bg-linear-to-t from-background via-transparent to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center p-8">
