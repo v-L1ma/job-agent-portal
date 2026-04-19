@@ -30,6 +30,8 @@ import {
   ApiError,
   generateCvForJob,
   getJobById,
+  getJobCompanyLookup,
+  getJobPlatformLookup,
   evaluateJob,
   type JobDetailsResponse,
   type JobListItem,
@@ -43,10 +45,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/use-debounce";
 
 const PAGE_SIZE = 9;
+const ALL_PLATFORMS_VALUE = { label:"Todas as plataformas ",value:"all-platforms"};
+const ALL_COMPANIES_VALUE = { label:"Todas as empresas ",value:"all-companies"};
 
 function truncateText(value: string, length = 190): string {
   if (value.length <= length) {
@@ -123,11 +128,13 @@ export default function ApplicationsPage() {
   } = useJobSearch();
 
   const [stackFilter, setStackFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [companyFilter, setCompanyFilter] = useState<{label: string, value: string}>(ALL_COMPANIES_VALUE);
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+  const [platformFilter, setPlatformFilter] = useState(ALL_PLATFORMS_VALUE);
+  const [platformOptions, setPlatformOptions] = useState<string[]>([]);
   const [page, setPage] = useState(1);
 
   const debouncedStackFilter = useDebounce(stackFilter, 500);
-  const debouncedLocationFilter = useDebounce(locationFilter, 500);
 
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -163,13 +170,15 @@ export default function ApplicationsPage() {
 
       await performSearch({
         stack: debouncedStackFilter.trim() || undefined,
+        company: companyFilter.value === ALL_COMPANIES_VALUE.value ? undefined : companyFilter.value,
+        platform: platformFilter.value === ALL_PLATFORMS_VALUE.value ? undefined : platformFilter.value,
         page,
         pageSize: PAGE_SIZE,
       });
     } catch (loadError) {
       setError(normalizeError(loadError));
     }
-  }, [debouncedStackFilter, page, performSearch]);
+  }, [companyFilter, debouncedStackFilter, page, performSearch, platformFilter]);
 
   useEffect(() => {
     void loadJobs();
@@ -178,6 +187,52 @@ export default function ApplicationsPage() {
   useEffect(() => {
     setJobs(searchJobs);
   }, [searchJobs]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCompanies = async () => {
+      try {
+        const companies = await getJobCompanyLookup(undefined, 50);
+        if (isMounted) {
+          setCompanyOptions(companies);
+        }
+      } catch {
+        if (isMounted) {
+          setCompanyOptions([]);
+        }
+      }
+    };
+
+    void loadCompanies();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPlatforms = async () => {
+      try {
+        const platforms = await getJobPlatformLookup(undefined, 20);
+        if (isMounted) {
+          setPlatformOptions(platforms);
+        }
+      } catch {
+        if (isMounted) {
+          setPlatformOptions([]);
+        }
+      }
+    };
+
+    void loadPlatforms();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const openDetails = async (jobId: string) => {
     try {
@@ -282,8 +337,8 @@ export default function ApplicationsPage() {
 
   return (
     <DashboardLayout title="Vagas e Candidaturas">
-      <div className="flex flex-col h-full -m-4 md:-m-8">
-        <div className="p-4 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3 shrink-0 px-6">
+      <div className="flex flex-col -m-4 md:-m-8">
+        <div className="md:sticky md:-top-8 p-4 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3 shrink-0 px-6 z-10 transition-all">
           <div className="relative flex items-center w-full md:flex-1 md:max-w-[380px]">
             <Search className="absolute left-3 w-4 h-4 text-slate-400" />
             <Input
@@ -295,6 +350,54 @@ export default function ApplicationsPage() {
               }}
               className="pl-10 h-10"
             />
+          </div>
+
+          <div className="w-full md:w-64 md:h-full">
+            <Select
+              value={companyFilter}
+              onValueChange={(value) => {
+                setPage(1);
+                setCompanyFilter(value ?? ALL_COMPANIES_VALUE);
+              }}
+            >
+              <SelectTrigger 
+                className="h-full w-full"
+              >
+                <SelectValue placeholder="Filtrar por empresa" />
+              </SelectTrigger>
+              <SelectContent side="bottom" align="start" sideOffset={8}>
+                <SelectItem value={ALL_COMPANIES_VALUE}>Todas as empresas</SelectItem>
+                {companyOptions.map((company) => (
+                  <SelectItem key={company} value={{ label: company, value: company }}>
+                    {company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-56 md:h-full">
+            <Select
+              value={platformFilter}
+              onValueChange={(value) => {
+                setPage(1);
+                setPlatformFilter(value ?? ALL_PLATFORMS_VALUE);
+              }}
+            >
+              <SelectTrigger 
+                className="h-full w-full"
+              >
+                <SelectValue placeholder="Filtrar por plataforma" />
+              </SelectTrigger>
+              <SelectContent side="bottom" align="start" sideOffset={8}>
+                <SelectItem value={ALL_PLATFORMS_VALUE}>Todas as plataformas</SelectItem>
+                {platformOptions.map((platform) => (
+                  <SelectItem key={platform} value={{ label: platform, value: platform }}>
+                    {platform}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button className="h-10 px-4" onClick={() => void loadJobs()}>
@@ -336,8 +439,8 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-900/10 h-full">
-          <ScrollArea className="h-full">
+        <div className="bg-slate-50/50 dark:bg-slate-900/10 md:flex-1 md:overflow-hidden">
+          <ScrollArea className="h-full hidden md:flex">
             <div className="p-8 max-w-7xl mx-auto space-y-6">
               {jobsCount === 0 && (loading || isPolling) && (
                 <div className="py-16 text-center text-slate-500 dark:text-slate-400">
@@ -386,6 +489,12 @@ export default function ApplicationsPage() {
                           <h3 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
                             {job.title}
                           </h3>
+                          {job.company && (
+                            <p className="text-xs text-slate-600 dark:text-slate-300 inline-flex items-center gap-1.5">
+                              <Building2 className="w-3.5 h-3.5" />
+                              {job.company}
+                            </p>
+                          )}
                           <p className="text-xs text-slate-500 leading-relaxed">
                             {truncateText(job.description)}
                           </p>
@@ -449,6 +558,123 @@ export default function ApplicationsPage() {
               )}
             </div>
           </ScrollArea>
+
+          <div className="p-8 max-w-7xl mx-auto space-y-6 md:hidden">
+            {jobsCount === 0 && (loading || isPolling) && (
+              <div className="py-16 text-center text-slate-500 dark:text-slate-400">
+                <LoaderCircle className="w-5 h-5 mx-auto mb-2 animate-spin" />
+                {isPolling ? "Buscando vagas nas plataformas..." : "Carregando vagas..."}
+              </div>
+            )}
+
+            {!loading && displayedError && (
+              <div className="rounded-lg border border-red-300/40 bg-red-500/10 text-red-500 px-4 py-3 text-sm">
+                {displayedError}
+              </div>
+            )}
+
+            {!loading && !displayedError && jobsCount === 0 && (
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                Nenhuma vaga encontrada para os filtros aplicados.
+              </div>
+            )}
+
+            {!loading && !displayedError && jobsCount > 0 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {jobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="p-5 rounded-xl border border-slate-200 dark:border-primary/10 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all group flex flex-col min-h-[220px]"
+                    >
+                      <div className="space-y-2 mb-3 relative pr-8">
+                        <div className="absolute top-0 right-0">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="h-8 w-8 text-slate-800 hover:text-slate-500 dark:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
+                              <MoreVertical className="w-4 h-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-fit p-1">
+                              <DropdownMenuItem 
+                                className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap"
+                                onClick={() => setFeedbackJobId(job.id)}
+                              >
+                                <ThumbsDown className="w-4 h-4" />
+                                Não tenho interesse
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <h3 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                          {job.title}
+                        </h3>
+                        {job.company && (
+                          <p className="text-xs text-slate-600 dark:text-slate-300 inline-flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {job.company}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          {truncateText(job.description)}
+                        </p>
+                      </div>
+
+                      <div className="mt-auto space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center justify-between">
+                          {getPlatformBadge(job.platform)}
+                          <a
+                            href={job.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-primary inline-flex items-center gap-1"
+                          >
+                            Abrir vaga
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button variant="outline" className="flex-1" onClick={() => void openDetails(job.id)}>
+                            Ver detalhes
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            disabled={generatingForJobId === job.id}
+                            onClick={() => void handleGenerateCv(job.id)}
+                          >
+                            {generatingForJobId === job.id ? "Gerando..." : "Gerar curriculo personalizado"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Página {page} de {totalPages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={page <= 1 || loading}
+                      onClick={() => setPage((value) => Math.max(1, value - 1))}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Anterior
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={page >= totalPages || loading}
+                      onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                    >
+                      Próxima
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <Sheet
@@ -463,7 +689,7 @@ export default function ApplicationsPage() {
         >
           <SheetContent
             side="right"
-            className="max-w-[640px] w-full p-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950"
+            className="md:max-w-160 w-full p-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950"
           >
             <ScrollArea className="h-full">
               <div className="p-8 space-y-6">
