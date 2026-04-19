@@ -257,10 +257,6 @@
   }
 }
 
-.material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
 .glass-panel {
   background: rgba(24, 23, 41, 0.7);
   backdrop-filter: blur(12px);

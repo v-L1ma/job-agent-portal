@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Image from "next/image";
+import { TrendingUp } from "lucide-react";
 
 interface AuthLayoutProps {
   form: ReactNode;
@@ -30,12 +31,7 @@ export function AuthLayout({ form, banner }: AuthLayoutProps) {
             {/* <div className="glass-panel p-6 rounded-2xl max-w-sm self-start transform -rotate-1 shadow-2xl">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-primary text-xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    trending_up
-                  </span>
+                  <TrendingUp className="text-primary size-5" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">

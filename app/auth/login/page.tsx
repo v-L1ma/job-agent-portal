@@ -94,9 +94,7 @@ export default function LoginPage() {
                 E-mail
               </Label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">
-                  mail
-                </span>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-5" />
                 <Input
                   aria-invalid={Boolean(errors.email)}
                   autoComplete="email"
@@ -244,7 +242,7 @@ export default function LoginPage() {
           {/* <div className="absolute top-12 right-12 glass-panel p-4 rounded-lg border border-outline-variant animate-pulse">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-container rounded">
-                <span className="material-symbols-outlined text-primary text-xl">trending_up</span>
+                <TrendingUp className="text-primary size-5" />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">

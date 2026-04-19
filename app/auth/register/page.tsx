@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Bolt, PersonStanding, Mail, Lock, ArrowRight, Star, TrendingUp } from "lucide-react";
 
 const registerSchema = z
   .object({
@@ -92,12 +93,7 @@ export default function RegisterPage() {
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(71,79,230,0.4)]">
-                <span
-                  className="material-symbols-outlined text-white"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  bolt
-                </span>
+                <Bolt className="text-white size-6 fill-current" />
               </div>
               <span className="text-xl font-bold tracking-tight text-primary">BuscaVagas</span>
             </div>
@@ -117,9 +113,7 @@ export default function RegisterPage() {
               </Label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-outline text-lg group-focus-within:text-primary transition-colors">
-                    person
-                  </span>
+                  <PersonStanding className="text-outline size-5 group-focus-within:text-primary transition-colors" />
                 </div>
                 <Input
                   aria-invalid={Boolean(errors.name)}
@@ -143,9 +137,7 @@ export default function RegisterPage() {
               </Label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-outline text-lg group-focus-within:text-primary transition-colors">
-                    mail
-                  </span>
+                  <Mail className="text-outline size-5 group-focus-within:text-primary transition-colors" />
                 </div>
                 <Input
                   aria-invalid={Boolean(errors.email)}
@@ -192,11 +184,6 @@ export default function RegisterPage() {
                   Confirmar Senha
                 </Label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="material-symbols-outlined text-outline text-lg group-focus-within:text-primary transition-colors">
-                      enhanced_encryption
-                    </span>
-                  </div>
                   <PasswordInput
                     aria-invalid={Boolean(errors.confirmPassword)}
                     autoComplete="new-password"
@@ -242,7 +229,7 @@ export default function RegisterPage() {
               type="submit"
             >
               {isSubmitting ? "Criando conta..." : "Criar Conta"}
-              <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              <ArrowRight className="size-5" />
             </Button>
           </form>
 

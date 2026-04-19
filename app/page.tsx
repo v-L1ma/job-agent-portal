@@ -66,7 +66,7 @@ export default function LandingPage() {
 
           <div className="relative z-10 mx-auto max-w-7xl text-center">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-outline-variant bg-primary-container px-3 py-1 text-[11px] font-bold uppercase tracking-[0.05em] text-primary">
-              <span className="material-symbols-outlined text-sm">auto_awesome</span>
+              <Sparkles className="size-3.5" />
               Nova era de recrutamento tech
             </div>
             <h1 className="mx-auto mb-6 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight md:text-6xl">
@@ -102,7 +102,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div className="group rounded-xl border border-outline-variant bg-surface-container p-8 transition-colors hover:border-primary/50">
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-2xl">schedule</span>
+                  <Clock className="size-6" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">Economia de Tempo</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
@@ -111,7 +111,7 @@ export default function LandingPage() {
               </div>
               <div className="group rounded-xl border border-outline-variant bg-surface-container p-8 transition-colors hover:border-primary/50">
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-2xl">psychology</span>
+                  <Brain className="size-6" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">Candidaturas Inteligentes</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
@@ -120,7 +120,7 @@ export default function LandingPage() {
               </div>
               <div className="group rounded-xl border border-outline-variant bg-surface-container p-8 transition-colors hover:border-primary/50">
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-2xl">description</span>
+                  <FileText className="size-6" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">IA de Curriculos</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
@@ -148,11 +148,11 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div className="flex h-full flex-col rounded-xl border border-outline-variant bg-surface-container-high p-8">
                 <div className="mb-6 flex gap-1 text-yellow-500">
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
                 </div>
                 <p className="mb-8 grow text-sm italic text-on-surface-variant">
                   Em 2 semanas consegui 5 entrevistas reais. O BuscaVagas limpou o processo de busca e me permitiu focar apenas em estudar para os algoritmos.
@@ -168,11 +168,11 @@ export default function LandingPage() {
 
               <div className="flex h-full flex-col rounded-xl border border-outline-variant bg-surface-container-high p-8">
                 <div className="mb-6 flex gap-1 text-yellow-500">
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
                 </div>
                 <p className="mb-8 grow text-sm italic text-on-surface-variant">
                   A integracao com a Gupy e impecavel. O preenchimento automatico salvou minha sanidade mental.
@@ -188,11 +188,11 @@ export default function LandingPage() {
 
               <div className="flex h-full flex-col rounded-xl border border-outline-variant bg-surface-container-high p-8">
                 <div className="mb-6 flex gap-1 text-yellow-500">
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
+                  <Star className="size-3.5 fill-current" />
                 </div>
                 <p className="mb-8 grow text-sm italic text-on-surface-variant">
                   Eu estava cetico, mas os resultados vieram rapido. Recomendo para qualquer um que esteja em busca ativa no mercado tech.
@@ -220,9 +220,9 @@ export default function LandingPage() {
                 <div className="mb-2 text-sm font-bold uppercase text-on-surface-variant">Free</div>
                 <div className="mb-6 text-4xl font-black">R$0<span className="text-sm font-medium text-on-surface-variant">/mes</span></div>
                 <ul className="mb-8 space-y-4 text-sm text-on-surface-variant">
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> 5 candidaturas/semana</li>
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Integracao LinkedIn Basica</li>
-                  <li className="flex items-center gap-2 text-outline"><span className="material-symbols-outlined text-lg">close</span> IA de Curriculo</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> 5 candidaturas/semana</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Integracao LinkedIn Basica</li>
+                  <li className="flex items-center gap-2 text-outline"><X className="size-4.5" /> IA de Curriculo</li>
                 </ul>
                 <button className="w-full rounded-md border border-outline-variant py-3 text-sm font-bold transition-colors hover:bg-white/5">Selecionar</button>
               </div>

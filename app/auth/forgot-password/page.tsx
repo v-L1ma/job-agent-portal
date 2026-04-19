@@ -11,6 +11,7 @@ import { forgotPassword } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Sparkles, Mail, ArrowRight, ChevronLeft, ShieldCheck } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Informe um e-mail valido."),
@@ -65,12 +66,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           <div>
             <span className="text-2xl font-extrabold tracking-tight text-primary flex items-center gap-2">
-              <span
-                className="material-symbols-outlined text-3xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                auto_awesome
-              </span>
+              <Sparkles className="size-8 fill-current" />
               BuscaVagas
             </span>
           </div>
@@ -90,9 +86,7 @@ export default function ForgotPasswordPage() {
               </Label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-slate-500 group-focus-within:text-primary transition-colors text-xl">
-                    mail
-                  </span>
+                  <Mail className="text-slate-500 group-focus-within:text-primary transition-colors size-5" />
                 </div>
                 <Input
                   aria-invalid={Boolean(errors.email)}
@@ -116,7 +110,7 @@ export default function ForgotPasswordPage() {
               type="submit"
             >
               <span>{isSubmitting ? "Enviando..." : "Enviar Link"}</span>
-              <span className="material-symbols-outlined text-xl">arrow_forward</span>
+              <ArrowRight className="size-5" />
             </Button>
           </form>
 
@@ -125,9 +119,7 @@ export default function ForgotPasswordPage() {
               className="inline-flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors group"
               href="/auth/login"
             >
-              <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">
-                chevron_left
-              </span>
+              <ChevronLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
               Voltar para o Login
             </Link>
           </div>
@@ -149,12 +141,7 @@ export default function ForgotPasswordPage() {
           <div className="relative z-10 h-full flex flex-col justify-end p-16 xl:p-24">
             <div className="max-w-xl backdrop-blur-md bg-surface-container/30 p-8 rounded-xl border border-outline-variant">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20 mb-6">
-                <span
-                  className="material-symbols-outlined text-primary text-sm"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  verified_user
-                </span>
+                <ShieldCheck className="size-4 text-primary fill-current" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
                   Enterprise Security
                 </span>

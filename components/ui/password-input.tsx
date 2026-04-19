@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Lock, Eye, EyeOff } from "lucide-react";
 
 interface PasswordInputProps extends React.ComponentProps<typeof Input> {}
 
@@ -12,9 +13,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
   return (
     <div className="relative flex items-center">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <span className="material-symbols-outlined text-outline text-lg group-focus-within:text-primary transition-colors">
-          lock
-        </span>
+        <Lock className="text-outline size-5 group-focus-within:text-primary transition-colors" />
       </div>
       <Input
         type={showPassword ? "text" : "password"}
@@ -27,9 +26,11 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
         className="absolute inset-y-0 right-4 top-2 text-outline hover:text-primary transition-colors focus:outline-none"
         aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
       >
-        <span className="material-symbols-outlined text-lg leading-none">
-          {showPassword ? "visibility_off" : "visibility"}
-        </span>
+        {showPassword ? (
+          <EyeOff className="size-5" />
+        ) : (
+          <Eye className="size-5" />
+        )}
       </button>
     </div>
   );
