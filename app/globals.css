@@ -103,9 +103,9 @@
   --m3-surface-container-high: #edf3ff;
   --m3-surface-container-highest: #e6edff;
   --m3-on-surface: #0f172a;
-  --m3-on-surface-variant: #475569;
-  --m3-outline: #94a3b8;
-  --m3-outline-variant: rgba(148, 163, 184, 0.35);
+  --m3-on-surface-variant: #64748b;
+  --m3-outline: #64748b;
+  --m3-outline-variant: rgba(148, 163, 184, 0.45);
   --m3-primary: #474fe6;
   --m3-primary-container: rgba(71, 79, 230, 0.12);
   --m3-on-primary: #ffffff;
@@ -180,9 +180,9 @@
   --m3-surface-container-high: #232238;
   --m3-surface-container-highest: #2e2d4a;
   --m3-on-surface: #f1f0f7;
-  --m3-on-surface-variant: #c7c4d8;
-  --m3-outline: #3e3d52;
-  --m3-outline-variant: rgba(71, 79, 230, 0.2);
+  --m3-on-surface-variant: #94a3b8;
+  --m3-outline: #94a3b8;
+  --m3-outline-variant: rgba(71, 79, 230, 0.4);
   --m3-primary: #474fe6;
   --m3-primary-container: rgba(71, 79, 230, 0.15);
   --m3-on-primary: #ffffff;

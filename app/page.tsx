@@ -24,22 +24,22 @@ export default function LandingPage() {
   return (
     <>
       <HealthCheckPing />
-      <header className="fixed top-0 z-50 w-full border-b border-indigo-500/20 bg-[#121121]">
+      <header className="fixed top-0 z-50 w-full border-b border-indigo-500/20 bg-[#0f0e1c]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <div className="text-xl font-bold tracking-tighter text-surface-tint">BuscaVagas</div>
+          <div className="text-xl font-bold tracking-tighter text-indigo-400">BuscaVagas</div>
           <nav className="hidden gap-8 text-sm font-medium tracking-tight md:flex">
-            <a className="text-slate-400 transition-colors hover:text-white" href="#funcionalidades">
+            <a className="text-slate-300 transition-colors hover:text-white" href="#funcionalidades">
               Funcionalidades
             </a>
-            <a className="text-slate-400 transition-colors hover:text-white" href="#precos">
+            <a className="text-slate-300 transition-colors hover:text-white" href="#precos">
               Precos
             </a>
-            <a className="text-slate-400 transition-colors hover:text-white" href="#sobre">
+            <a className="text-slate-300 transition-colors hover:text-white" href="#sobre">
               Sobre
             </a>
           </nav>
           <div className="flex items-center gap-4">
-            <Link className="text-sm font-medium tracking-tight text-slate-400 transition-colors hover:text-white" href="/auth/login">
+            <Link className="text-sm font-medium tracking-tight text-slate-300 transition-colors hover:text-white" href="/auth/login">
               Entrar
             </Link>
             <Link
@@ -274,17 +274,17 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-indigo-500/20 bg-[#121121]">
+      <footer className="border-t border-indigo-500/20 bg-[#0f0e1c]">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-8 py-12 md:flex-row">
-          <div className="text-lg font-black text-indigo-500">BuscaVagas</div>
+          <div className="text-lg font-black text-indigo-400">BuscaVagas</div>
           <div className="flex flex-wrap justify-center gap-6 text-[12px] font-medium uppercase tracking-[0.05em]">
-            <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#funcionalidades">Funcionalidades</a>
-            <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#precos">Precos</a>
-            <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#sobre">Sobre</a>
-            <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/login">Entrar</Link>
-            <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/register">Cadastro</Link>
+            <a className="text-slate-300 transition-colors hover:text-indigo-300" href="#funcionalidades">Funcionalidades</a>
+            <a className="text-slate-300 transition-colors hover:text-indigo-300" href="#precos">Precos</a>
+            <a className="text-slate-300 transition-colors hover:text-indigo-300" href="#sobre">Sobre</a>
+            <Link className="text-slate-300 transition-colors hover:text-indigo-300" href="/auth/login">Entrar</Link>
+            <Link className="text-slate-300 transition-colors hover:text-indigo-300" href="/auth/register">Cadastro</Link>
           </div>
-          <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-slate-500">© 2024 BuscaVagas. Todos os direitos reservados.</div>
+          <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-slate-400">© 2024 BuscaVagas. Todos os direitos reservados.</div>
         </div>
       </footer>
 
