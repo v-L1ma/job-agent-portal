@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Image from "next/image";
 
 interface AuthLayoutProps {
   form: ReactNode;
@@ -14,11 +15,13 @@ export function AuthLayout({ form, banner }: AuthLayoutProps) {
         </section>
         <section className="hidden md:flex w-[60%] relative overflow-hidden bg-slate-100 dark:bg-surface-dim">
           <div className="absolute inset-0 z-0">
-            <img
+            <Image
               alt="Ambiente de trabalho moderno com equipe de tecnologia"
-              className="w-full h-full object-cover opacity-60 mix-blend-luminosity"
-              data-alt="Modern high-tech workspace with glass walls and professional people collaborating in a dark ambient setting with indigo neon accents"
-              src="/assets/img-4.jpg"
+              className="object-cover opacity-60 mix-blend-luminosity"
+              fill
+              priority
+              sizes="(min-width: 768px) 60vw, 100vw"
+              src="/assets/img-4.webp"
             />
             <div className="absolute inset-0 bg-linear-to-r from-slate-100 via-white/50 to-transparent dark:from-surface dark:via-surface/40 dark:to-transparent"></div>
             <div className="absolute inset-0 bg-linear-to-t from-background to-transparent opacity-80"></div>

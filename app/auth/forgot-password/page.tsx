@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -135,11 +136,12 @@ export default function ForgotPasswordPage() {
       banner={
         <>
           <div className="absolute inset-0 z-0">
-            <img
+            <Image
               alt="Cybersecurity infrastructure visualization"
-              className="w-full h-full object-cover opacity-40 mix-blend-luminosity scale-105"
-              data-alt="abstract professional digital security grid with deep indigo light beams and futuristic server room aesthetics in dark environment"
-              src="/stitch/img-8.jpg"
+              className="object-cover opacity-40 mix-blend-luminosity scale-105"
+              fill
+              sizes="(min-width: 768px) 60vw, 100vw"
+              src="/assets/img-4.webp"
             />
             <div className="absolute inset-0 bg-linear-to-tr from-background via-transparent to-primary/10"></div>
             <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/20 to-background"></div>

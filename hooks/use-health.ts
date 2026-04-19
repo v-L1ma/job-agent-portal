@@ -12,6 +12,11 @@ export function useHealthCheck(): void {
   };
 
   useEffect(() => {
-    checkIsHealth();
+    // Delay health check to avoid blocking initial main thread
+    const timeoutId = setTimeout(() => {
+      checkIsHealth();
+    }, 2000);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 }

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { Bolt, Mail, Lock, ArrowRight, Star } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um e-mail valido."),
@@ -74,12 +75,7 @@ export default function LoginPage() {
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-8">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined text-white"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  bolt
-                </span>
+                <Bolt className="text-white size-6 fill-current" />
               </div>
               <span className="text-xl font-bold tracking-tight text-primary">BuscaVagas</span>
             </div>
@@ -132,9 +128,7 @@ export default function LoginPage() {
                 </Link>
               </div>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">
-                  lock
-                </span>
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-5" />
                 <PasswordInput
                   aria-invalid={Boolean(errors.password)}
                   autoComplete="current-password"
@@ -158,7 +152,7 @@ export default function LoginPage() {
                 type="submit"
               >
                 {isSubmitting ? "Entrando..." : "Entrar"}
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                <ArrowRight className="size-4" />
               </Button>
             </div>
           </form>
@@ -218,26 +212,16 @@ export default function LoginPage() {
           <div
             className="absolute inset-0 bg-cover bg-center"
             data-alt="Cinematic digital landscape with blue glowing network lines and data points representing global connectivity and artificial intelligence technology"
-            style={{ backgroundImage: "url('/stitch/img-2.jpg')" }}
+            style={{ backgroundImage: "url('/assets/img-4.webp')" }}
           ></div>
           <div className="absolute inset-0 bg-linear-to-r from-background via-background/40 to-transparent"></div>
           {/* <div className="absolute bottom-12 left-12 right-12 glass-panel p-8 rounded-xl border border-outline-variant shadow-2xl">
             <div className="flex gap-1 mb-4">
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
+              <Star className="text-tertiary size-4 fill-current" />
+              <Star className="text-tertiary size-4 fill-current" />
+              <Star className="text-tertiary size-4 fill-current" />
+              <Star className="text-tertiary size-4 fill-current" />
+              <Star className="text-tertiary size-4 fill-current" />
             </div>
             <blockquote className="text-xl font-medium text-white mb-6 leading-relaxed italic">
               &quot;O BuscaVagas transformou minha busca por emprego. As recomendacoes baseadas em dados sao precisas e me economizam horas todos os dias.&quot;

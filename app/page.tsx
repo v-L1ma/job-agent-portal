@@ -1,12 +1,29 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { HealthCheckPing } from "@/components/health/health-check-ping";
+import { absoluteUrl } from "@/lib/seo";
+import { Sparkles, Clock, Brain, FileText, Check, X } from "lucide-react";
 
-import { useHealthCheck } from '@/hooks/use-health';
-import Link from 'next/link';
+const organizationStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "BuscaVagas",
+  url: absoluteUrl("/"),
+  logo: absoluteUrl("/assets/img-4.jpg"),
+};
+
+const webSiteStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "BuscaVagas",
+  url: absoluteUrl("/"),
+  inLanguage: "pt-BR",
+};
 
 export default function LandingPage() {
-  useHealthCheck();
   return (
     <>
+      <HealthCheckPing />
       <header className="fixed top-0 z-50 w-full border-b border-indigo-500/20 bg-[#121121]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="text-xl font-bold tracking-tighter text-surface-tint">BuscaVagas</div>
@@ -17,7 +34,7 @@ export default function LandingPage() {
             <a className="text-slate-400 transition-colors hover:text-white" href="#precos">
               Precos
             </a>
-            <a className="text-slate-400 transition-colors hover:text-white" href="#depoimentos">
+            <a className="text-slate-400 transition-colors hover:text-white" href="#sobre">
               Sobre
             </a>
           </nav>
@@ -59,18 +76,23 @@ export default function LandingPage() {
               Automatize suas candidaturas em massa, personalize curriculos com IA e ganhe tempo para focar no que importa: passar nas entrevistas.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link
-                className="w-full rounded-md bg-primary px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary/25 transition-all hover:brightness-110 sm:w-auto"
-                href="/auth/register"
-              >
-                Comecar Agora
-              </Link>
-              <Link
-                className="w-full rounded-md border border-outline-variant bg-primary-container px-8 py-4 text-base font-bold text-primary transition-all hover:bg-white/5 sm:w-auto"
-                href="/auth/login"
-              >
-                Ver Demo
-              </Link>
+              
+            <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
+              <Image
+                alt="Preview do dashboard de candidaturas"
+                className="h-auto w-full opacity-80"
+                height={900}
+                priority
+                fetchPriority="high"
+                sizes="(min-width: 1280px) 1120px, 100vw"
+                src="/assets/preview (1) (2).webp"
+                width={1600}
+              />
+              <div className="absolute left-0 top-0 h-full w-full bg-linear-to-t from-background via-transparent to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center p-8">
+                
+              </div>
+            </div>
             </div>
           </div>
         </section>
@@ -109,44 +131,13 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative overflow-hidden px-6 py-24">
+        <section id="sobre" className="relative overflow-hidden px-6 py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mb-16 text-center">
               <h2 className="mb-4 text-3xl font-bold">Controle Total em Suas Maos</h2>
               <p className="mx-auto max-w-xl text-on-surface-variant">
                 Visualize o progresso de centenas de candidaturas em um unico painel intuitivo e moderno.
               </p>
-            </div>
-            <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
-              <img
-                alt="Preview do dashboard de candidaturas"
-                className="h-auto w-full opacity-80"
-                data-alt="modern tech dashboard with data visualizations and metrics in a dark obsidian theme with glowing indigo accents"
-                src="/stitch/img-9.jpg"
-              />
-              <div className="absolute left-0 top-0 h-full w-full bg-linear-to-t from-background via-transparent to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center p-8">
-                <div className="max-w-md rounded-xl border border-primary/30 bg-surface-container-high/90 p-6 shadow-2xl backdrop-blur-md">
-                  <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20 text-green-400">
-                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        check_circle
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Status em tempo real</div>
-                      <div className="font-bold">Candidatura Enviada - Google L4</div>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-secondary-container">
-                    <div className="h-full w-3/4 rounded-full bg-primary" />
-                  </div>
-                  <div className="mt-4 flex justify-between text-[11px] font-medium text-on-surface-variant">
-                    <span>Ajuste de Curriculo IA</span>
-                    <span className="text-primary">100% Completo</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -243,9 +234,9 @@ export default function LandingPage() {
                 <div className="mb-2 text-sm font-bold uppercase text-primary">Pro</div>
                 <div className="mb-6 text-4xl font-black">R$49<span className="text-sm font-medium text-on-surface-variant">/mes</span></div>
                 <ul className="mb-8 space-y-4 text-sm">
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Candidaturas Ilimitadas</li>
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> IA de Adaptacao de Curriculo</li>
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Multi-Plataforma (Gupy, Workday)</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Candidaturas Ilimitadas</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> IA de Adaptacao de Curriculo</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Multi-Plataforma (Gupy, Workday)</li>
                 </ul>
                 <button className="w-full rounded-md bg-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110">
                   Comecar Agora
@@ -256,9 +247,9 @@ export default function LandingPage() {
                 <div className="mb-2 text-sm font-bold uppercase text-on-surface-variant">Enterprise</div>
                 <div className="mb-6 text-4xl font-black">Contate</div>
                 <ul className="mb-8 space-y-4 text-sm text-on-surface-variant">
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Mentoria Individual</li>
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Suporte Prioritario 24/7</li>
-                  <li className="flex items-center gap-2"><span className="material-symbols-outlined text-lg text-primary">check</span> Customizacao de IA</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Mentoria Individual</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Suporte Prioritario 24/7</li>
+                  <li className="flex items-center gap-2"><Check className="size-4.5 text-primary" /> Customizacao de IA</li>
                 </ul>
                 <button className="w-full rounded-md border border-outline-variant py-3 text-sm font-bold transition-colors hover:bg-white/5">
                   Falar com Consultor
@@ -289,13 +280,22 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-6 text-[12px] font-medium uppercase tracking-[0.05em]">
             <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#funcionalidades">Funcionalidades</a>
             <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#precos">Precos</a>
-            <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#depoimentos">Sobre</a>
+            <a className="text-slate-500 transition-colors hover:text-indigo-400" href="#sobre">Sobre</a>
             <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/login">Entrar</Link>
             <Link className="text-slate-500 transition-colors hover:text-indigo-400" href="/auth/register">Cadastro</Link>
           </div>
           <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-slate-500">© 2024 BuscaVagas. Todos os direitos reservados.</div>
         </div>
       </footer>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteStructuredData) }}
+      />
     </>
   );
 }
