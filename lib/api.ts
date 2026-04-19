@@ -41,11 +41,14 @@ export interface GetUserProfileResponse {
 export interface LoginResponse {
   token: string;
   refreshToken: string;
+  isFirstAccess: boolean;
 }
 
 export interface JobsQuery {
   stack?: string;
   location?: string;
+  company?: string;
+  platform?: string;
   page?: number;
   pageSize?: number;
 }
@@ -56,7 +59,9 @@ export interface JobListItem {
   description: string;
   url: string;
   isApplied: boolean;
-  platform?:string;
+  company?: string;
+  location?: string;
+  platform?: string;
 }
 
 export interface PagedJobsResponse {
@@ -76,6 +81,8 @@ export interface JobDetailsResponse {
   id: string;
   plataformJobId: string;
   title: string;
+  company?: string;
+  platform?: string;
   description: string;
   url: string;
   isApplied: boolean;
@@ -84,7 +91,7 @@ export interface JobDetailsResponse {
 
 export interface SavePreferencesPayload {
   skills: string[];
-  level: string;
+  levels: string[];
   area: string;
 }
 
@@ -119,6 +126,24 @@ export interface GenerateCvResponse {
 export interface GeneratedCvListResponse {
   items: GeneratedCvItem[];
   total: number;
+}
+
+export interface UserPreferencesResponse {
+  skills: string[];
+  levels: string[];
+  area: string;
+}
+
+export interface CompanyLookupResponse {
+  companies: string[];
+}
+
+export interface PlatformLookupResponse {
+  platforms: string[];
+}
+
+export interface CompleteOnboardingResponse {
+  isFirstAccess: boolean;
 }
 
 export class ApiError extends Error {
@@ -230,18 +255,42 @@ export async function getJobById(id: string): Promise<JobDetailsResponse> {
   }
 }
 
-export interface UserPreferencesResponse {
-  skills: string[];
-  level: string;
-  area: string;
-}
-
 export async function getUserPreferences(): Promise<UserPreferencesResponse> {
   try {
     const response = await api.get<UserPreferencesResponse>("/api/users/preferences");
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar suas preferências.");
+  }
+}
+
+export async function getJobCompanyLookup(search?: string, limit = 20): Promise<string[]> {
+  try {
+    const response = await api.get<CompanyLookupResponse>("/api/jobs/companies/lookup", {
+      params: {
+        search,
+        limit,
+      },
+    });
+
+    return response.data.companies ?? [];
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar as empresas disponíveis.");
+  }
+}
+
+export async function getJobPlatformLookup(search?: string, limit = 20): Promise<string[]> {
+  try {
+    const response = await api.get<PlatformLookupResponse>("/api/jobs/platforms/lookup", {
+      params: {
+        search,
+        limit,
+      },
+    });
+
+    return response.data.platforms ?? [];
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar as plataformas disponíveis.");
   }
 }
 
@@ -256,19 +305,28 @@ export async function saveUserPreferences(
   }
 }
 
+export async function completeOnboarding(): Promise<CompleteOnboardingResponse> {
+  try {
+    const response = await api.post<CompleteOnboardingResponse>("/api/users/onboarding/complete");
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível concluir o onboarding.");
+  }
+}
+
 export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  try{
+  try {
     const response = await api.post<UploadCvResponse>("/api/users/cv", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
     return response.data;
-  }catch(error){
-    throw toApiError(error, "Erro ao fazer upload do cúrriculo")
+  } catch (error) {
+    throw toApiError(error, "Erro ao fazer upload do currículo.");
   }
 }
 

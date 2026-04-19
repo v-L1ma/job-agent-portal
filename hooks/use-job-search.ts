@@ -34,6 +34,8 @@ export function useJobSearch(): UseJobSearchResult {
     async (options: JobSearchOptions = {}) => {
       const {
         stack = null,
+        company = null,
+        platform = null,
         page = 1,
         pageSize = 10,
         onProgress = null,
@@ -79,6 +81,8 @@ export function useJobSearch(): UseJobSearchResult {
           };
 
           if (stack) params.stack = stack;
+          if (company) params.company = company;
+          if (platform) params.platform = platform;
 
           const response = await api.get<JobSearchResponse | JobsSearchApiPayload>('/api/jobs/search', {
             params,

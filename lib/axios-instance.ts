@@ -3,10 +3,21 @@ import { clearStoredTokens, getStoredTokens, setStoredTokens } from "./auth-stor
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_JOB_AGENT_API_URL ?? "http://localhost:5000";
 
-let isRefreshing = false;
-let failedQueue: any[] = [];
+interface RefreshTokenResponse {
+  token: string;
+  refreshToken: string;
+  isFirstAccess?: boolean;
+}
 
-const processQueue = (error: any, token: string | null = null) => {
+interface FailedRequestQueueItem {
+  resolve: (token: string | null) => void;
+  reject: (error: unknown) => void;
+}
+
+let isRefreshing = false;
+let failedQueue: FailedRequestQueueItem[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -47,11 +58,13 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+            if (token) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
             return api(originalRequest);
           })
           .catch((err) => {
@@ -72,14 +85,21 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
-          token: tokens.token,
-          refreshToken: tokens.refreshToken,
-        });
+        const { data } = await axios.post<RefreshTokenResponse>(
+          `${API_BASE_URL}/api/auth/refresh-token`,
+          {
+            token: tokens.token,
+            refreshToken: tokens.refreshToken,
+          }
+        );
+
+        const nextIsFirstAccess =
+          typeof data?.isFirstAccess === "boolean" ? data.isFirstAccess : tokens.isFirstAccess;
 
         setStoredTokens({
           token: data.token,
           refreshToken: data.refreshToken,
+          isFirstAccess: nextIsFirstAccess,
         });
 
         processQueue(null, data.token);

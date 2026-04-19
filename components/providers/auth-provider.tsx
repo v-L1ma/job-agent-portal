@@ -23,6 +23,7 @@ interface AuthSession {
   userId: string;
   name: string;
   email: string;
+  isFirstAccess: boolean;
 }
 
 interface RegisterInput {
@@ -37,6 +38,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
+  markOnboardingCompleted: () => void;
   logout: () => void;
 }
 
@@ -46,11 +48,18 @@ function subscribeNoop(): () => void {
   return () => {};
 }
 
-function buildSession(token: string, refreshToken: string): AuthSession | null {
+function buildSession(token: string, refreshToken: string, isFirstAccessFromApi?: boolean): AuthSession | null {
   const decoded = decodeAuthToken(token);
   if (!decoded?.sub) {
     return null;
   }
+
+  const tokenIsFirstAccess =
+    typeof decoded.isFirstAccess === "boolean"
+      ? decoded.isFirstAccess
+      : typeof decoded.isFirstAccess === "string"
+        ? decoded.isFirstAccess.toLowerCase() === "true"
+        : undefined;
 
   return {
     token,
@@ -58,6 +67,7 @@ function buildSession(token: string, refreshToken: string): AuthSession | null {
     userId: decoded.sub,
     name: decoded.name ?? "Usuário",
     email: decoded.email ?? "",
+    isFirstAccess: isFirstAccessFromApi ?? tokenIsFirstAccess ?? false,
   };
 }
 
@@ -67,7 +77,7 @@ function readSessionFromStorage(): AuthSession | null {
     return null;
   }
 
-  const restored = buildSession(stored.token, stored.refreshToken);
+  const restored = buildSession(stored.token, stored.refreshToken, stored.isFirstAccess);
   if (!restored) {
     clearStoredTokens();
     return null;
@@ -94,9 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredTokens({
       token: response.token,
       refreshToken: response.refreshToken,
+      isFirstAccess: response.isFirstAccess,
     });
 
-    const nextSession = buildSession(response.token, response.refreshToken);
+    const nextSession = buildSession(response.token, response.refreshToken, response.isFirstAccess);
 
     if (!nextSession) {
       clearStoredTokens();
@@ -104,6 +115,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setSessionState(nextSession);
+  }, []);
+
+  const markOnboardingCompleted = useCallback(() => {
+    const currentTokens = getStoredTokens();
+    if (currentTokens?.token && currentTokens.refreshToken) {
+      setStoredTokens({
+        ...currentTokens,
+        isFirstAccess: false,
+      });
+    }
+
+    setSessionState((previousSession) => {
+      const baseSession = previousSession ?? readSessionFromStorage();
+      if (!baseSession) {
+        return null;
+      }
+
+      return {
+        ...baseSession,
+        isFirstAccess: false,
+      };
+    });
   }, []);
 
   const register = useCallback(
@@ -132,9 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(session?.token),
       login,
       register,
+      markOnboardingCompleted,
       logout,
     }),
-    [isLoading, login, logout, register, session]
+    [isLoading, login, logout, markOnboardingCompleted, register, session]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

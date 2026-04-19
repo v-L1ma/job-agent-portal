@@ -1,6 +1,7 @@
 export interface StoredAuthTokens {
   token: string;
   refreshToken: string;
+  isFirstAccess?: boolean;
 }
 
 export interface DecodedAuthToken {
@@ -8,6 +9,7 @@ export interface DecodedAuthToken {
   name?: string;
   email?: string;
   exp?: number;
+  isFirstAccess?: string | boolean;
 }
 
 const AUTH_STORAGE_KEY = "jobAgentPortal.auth";
@@ -35,6 +37,8 @@ export function getStoredTokens(): StoredAuthTokens | null {
     return {
       token: parsed.token,
       refreshToken: parsed.refreshToken,
+      isFirstAccess:
+        typeof parsed.isFirstAccess === "boolean" ? parsed.isFirstAccess : undefined,
     };
   } catch {
     return null;

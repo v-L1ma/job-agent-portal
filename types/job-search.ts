@@ -36,6 +36,8 @@ export interface UseJobSearchResult {
 
 export interface JobSearchOptions {
   stack?: string | null;
+  company?: string | null;
+  platform?: string | null;
   page?: number;
   pageSize?: number;
   onProgress?: (data: JobSearchResponse) => void;
