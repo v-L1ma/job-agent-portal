@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApiError, completeOnboarding } from "@/lib/api";
 import { useAuth } from "../providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { PreferenciasForm } from "@/components/preferencias/preferencias-form";
@@ -14,31 +12,12 @@ interface FirstAccessModalProps {
   onCompleted: () => void;
 }
 
-type ModalMessage = {
-  type: "error" | "success";
-  text: string;
-};
-
-function normalizeError(error: unknown, fallbackMessage: string): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallbackMessage;
-}
-
 export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
   const { logout } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [canFinish, setCanFinish] = useState(false);
-  const [finishingOnboarding, setFinishingOnboarding] = useState(false);
-  const [message, setMessage] = useState<ModalMessage | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -65,37 +44,14 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
 
     setStep(1);
     setCanFinish(false);
-    setMessage(null);
   }, [open]);
 
   if (!open) {
     return null;
   }
 
-  const handleFinish = async () => {
-    if (!canFinish) {
-      setMessage({
-        type: "error",
-        text: "Envie um currículo PDF para concluir o onboarding.",
-      });
-      return;
-    }
-
-    try {
-      setFinishingOnboarding(true);
-      setMessage(null);
-
-      await completeOnboarding();
-      setMessage({ type: "success", text: "Onboarding concluído com sucesso." });
-      onCompleted();
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: normalizeError(error, "Não foi possível concluir o onboarding."),
-      });
-    } finally {
-      setFinishingOnboarding(false);
-    }
+  const handleFinish = () => {
+    onCompleted();
   };
 
   return (
@@ -120,7 +76,6 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
             <PreferenciasForm
               mode="modal"
               onSaved={() => {
-                setMessage(null);
                 setStep(2);
               }}
             />
@@ -133,21 +88,6 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
               onUploadSuccess={() => setCanFinish(true)}
             />
           )}
-
-          {message && (
-            <div
-              className={`rounded-lg border px-4 py-3 text-sm ${
-                message.type === "success"
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
-                  : "border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
-              }`}
-            >
-              <div className="inline-flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                {message.text}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
@@ -155,7 +95,6 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
             <Button
               type="button"
               variant="destructive"
-              disabled={finishingOnboarding}
               onClick={handleLogout}
             >
               Sair da conta
@@ -163,10 +102,9 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
             <Button
               type="button"
               variant="ghost"
-              disabled={step === 1 || finishingOnboarding}
+              disabled={step === 1}
               onClick={() => {
                 setStep(1);
-                setMessage(null);
               }}
             >
               Voltar
@@ -178,10 +116,9 @@ export function FirstAccessModal({ open, onCompleted }: FirstAccessModalProps) {
           ) : (
             <Button
               type="button"
-              onClick={() => void handleFinish()}
-              disabled={finishingOnboarding || !canFinish}
+              onClick={handleFinish}
+              disabled={!canFinish}
             >
-              {finishingOnboarding ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
               Concluir onboarding
             </Button>
           )}

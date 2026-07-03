@@ -15,21 +15,14 @@ import {
   getStoredTokens,
   setStoredTokens,
 } from "@/lib/auth-storage";
-import { login as loginRequest, register as registerRequest } from "@/lib/api";
+import { login as loginRequest, register as registerRequest, type RegisterPayload } from "@/lib/api";
 
 interface AuthSession {
   token: string;
-  refreshToken: string;
+  refreshToken?: string;
   userId: string;
   name: string;
   email: string;
-  isFirstAccess: boolean;
-}
-
-interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
 }
 
 interface AuthContextValue {
@@ -37,8 +30,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (input: RegisterInput) => Promise<void>;
-  markOnboardingCompleted: () => void;
+  register: (input: { name: string; email: string; password: string; confirmPassword: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -48,42 +40,28 @@ function subscribeNoop(): () => void {
   return () => {};
 }
 
-function buildSession(token: string, refreshToken: string, isFirstAccessFromApi?: boolean): AuthSession | null {
+function buildSession(token: string, refreshToken?: string): AuthSession | null {
   const decoded = decodeAuthToken(token);
-  if (!decoded?.sub) {
+  if (!decoded?.user_id) {
     return null;
   }
-
-  const tokenIsFirstAccess =
-    typeof decoded.isFirstAccess === "boolean"
-      ? decoded.isFirstAccess
-      : typeof decoded.isFirstAccess === "string"
-        ? decoded.isFirstAccess.toLowerCase() === "true"
-        : undefined;
 
   return {
     token,
     refreshToken,
-    userId: decoded.sub,
-    name: decoded.name ?? "Usuário",
+    userId: decoded.user_id,
+    name: decoded.email ?? "Usuário",
     email: decoded.email ?? "",
-    isFirstAccess: isFirstAccessFromApi ?? tokenIsFirstAccess ?? false,
   };
 }
 
 function readSessionFromStorage(): AuthSession | null {
   const stored = getStoredTokens();
-  if (!stored?.token || !stored.refreshToken) {
+  if (!stored?.token) {
     return null;
   }
 
-  const restored = buildSession(stored.token, stored.refreshToken, stored.isFirstAccess);
-  if (!restored) {
-    clearStoredTokens();
-    return null;
-  }
-
-  return restored;
+  return buildSession(stored.token, stored.refreshToken);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -103,11 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setStoredTokens({
       token: response.token,
-      refreshToken: response.refreshToken,
-      isFirstAccess: response.isFirstAccess,
+      refreshToken: response.token,
     });
 
-    const nextSession = buildSession(response.token, response.refreshToken, response.isFirstAccess);
+    const nextSession = buildSession(response.token, response.token);
 
     if (!nextSession) {
       clearStoredTokens();
@@ -117,35 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionState(nextSession);
   }, []);
 
-  const markOnboardingCompleted = useCallback(() => {
-    const currentTokens = getStoredTokens();
-    if (currentTokens?.token && currentTokens.refreshToken) {
-      setStoredTokens({
-        ...currentTokens,
-        isFirstAccess: false,
-      });
-    }
-
-    setSessionState((previousSession) => {
-      const baseSession = previousSession ?? readSessionFromStorage();
-      if (!baseSession) {
-        return null;
-      }
-
-      return {
-        ...baseSession,
-        isFirstAccess: false,
-      };
-    });
-  }, []);
-
   const register = useCallback(
-    async (input: RegisterInput) => {
+    async (input: { name: string; email: string; password: string; confirmPassword: string }) => {
       await registerRequest({
         name: input.name,
         email: input.email,
         password: input.password,
-        role: "Candidate",
+        confirmPassword: input.confirmPassword,
       });
 
       await login(input.email, input.password);
@@ -165,10 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(session?.token),
       login,
       register,
-      markOnboardingCompleted,
       logout,
     }),
-    [isLoading, login, logout, markOnboardingCompleted, register, session]
+    [isLoading, login, logout, register, session]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

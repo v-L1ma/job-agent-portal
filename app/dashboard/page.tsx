@@ -20,49 +20,9 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { getJobs, JobListItem } from "@/lib/api";
-import { useEffect, useState } from "react";
-
-interface RecentJob extends JobListItem {
-  company?: string;
-  platform?: string;
-  date?: string;
-  status: "Aplicada" | "Pulada" | "Falha";
-}
 
 export default function DashboardPage() {
   const { statistics, isLoading, error, refetch } = useDashboard();
-  const [recentApps, setRecentApps] = useState<RecentJob[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(false);
-
-  // useEffect(() => {
-  //   const fetchRecentJobs = async () => {
-  //     setLoadingJobs(true);
-  //     try {
-  //       const response = await getJobs({ page: 1, pageSize: 5 });
-  //       const fallbackJobs = (response as { data?: JobListItem[] }).data;
-  //       const recentJobs = Array.isArray(response?.items)
-  //         ? response.items
-  //         : Array.isArray(fallbackJobs)
-  //         ? fallbackJobs
-  //         : [];
-  //       const mappedJobs: RecentJob[] = recentJobs.map((job) => ({
-  //         ...job,
-  //         company: "Empresa",
-  //         platform: "LinkedIn",
-  //         date: "Recente",
-  //         status: job.isApplied ? "Aplicada" : "Pulada",
-  //       }));
-  //       setRecentApps(mappedJobs);
-  //     } catch (err) {
-  //       console.error("Erro ao buscar vagas recentes:", err);
-  //     } finally {
-  //       setLoadingJobs(false);
-  //     }
-  //   };
-
-  //   fetchRecentJobs();
-  // }, []);
 
   if (isLoading) {
     return (
@@ -102,41 +62,43 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Total",
-      value: statistics?.overview.total.toLocaleString("pt-BR") ?? "0",
-      change: `${statistics?.overview.totalPercentageChange ?? 0}% vs mês passado`,
+      value: statistics?.total.count.toLocaleString("pt-BR") ?? "0",
+      change: `${statistics?.total.variation ?? 0} ${statistics?.total.variationLabel ?? ""}`,
       icon: Activity,
       color: "text-primary",
     },
     {
       title: "Aplicadas",
-      value: statistics?.overview.applied.toLocaleString("pt-BR") ?? "0",
-      change: `${statistics?.overview.appliedSuccessRate ?? 0}% de sucesso`,
+      value: statistics?.applied.count.toLocaleString("pt-BR") ?? "0",
+      change: `${statistics?.applied.successRate ?? 0}% de sucesso`,
       icon: CheckCircle,
       color: "text-green-500",
     },
     {
       title: "Puladas",
-      value: statistics?.overview.skipped.toLocaleString("pt-BR") ?? "0",
-      change: "Filtros aplicados",
+      value: statistics?.skipped.count.toLocaleString("pt-BR") ?? "0",
+      change: statistics?.skipped.label ?? "Filtros aplicados",
       icon: SkipForward,
       color: "text-yellow-500",
     },
     {
       title: "Falhas",
-      value: statistics?.overview.failed.toLocaleString("pt-BR") ?? "0",
-      change: `${statistics?.overview.failedWeeklyChange ?? 0}% essa semana`,
+      value: statistics?.failures.count.toLocaleString("pt-BR") ?? "0",
+      change: `${statistics?.failures.thisWeek ?? 0} essa semana`,
       icon: AlertCircle,
       color: "text-red-500",
     },
   ];
 
   const maxDayCount = Math.max(
-    ...(statistics?.applicationsByDay.data.map((d) => d.count) ?? [1])
+    ...(statistics?.applicationsPerDay.map((d) => d.count) ?? [1])
   );
 
   const platformMaxCount = Math.max(
-    ...(statistics?.platformDistribution.data.map((p) => p.count) ?? [1])
+    ...(statistics?.platformDistribution.map((p) => p.count) ?? [1])
   );
+
+  const recentApplications = statistics?.recentApplications ?? [];
 
   return (
     <DashboardLayout title="Dashboard">
@@ -186,7 +148,7 @@ export default function DashboardPage() {
             <CardTitle className="font-bold">Candidaturas por dia</CardTitle>
           </CardHeader>
           <CardContent className="h-[240px] flex items-end justify-between gap-3 pt-6 pb-2">
-            {statistics?.applicationsByDay.data.slice(-7).map((day, i) => (
+            {statistics?.applicationsPerDay.slice(-7).map((day, i) => (
               <div
                 key={i}
                 className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
@@ -204,10 +166,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                  {new Date(day.date).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                  })}
+                  {day.date}
                 </div>
               </div>
             ))}
@@ -243,7 +202,8 @@ export default function DashboardPage() {
                   strokeDasharray="251.2"
                   strokeDashoffset={
                     251.2 -
-                    (251.2 * (statistics?.statusDistribution.appliedPercentage ?? 0)) /
+                    (251.2 *
+                      (statistics?.statusDistribution.find((s) => s.status === "Aplicadas")?.percentage ?? 0)) /
                       100
                   }
                   strokeWidth="12"
@@ -251,7 +211,7 @@ export default function DashboardPage() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-bold">
-                  {statistics?.statusDistribution.total.toLocaleString("pt-BR") ??
+                  {statistics?.statusDistribution.find((s) => s.status === "Total")?.count.toLocaleString("pt-BR") ??
                     "0"}
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -260,33 +220,21 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="w-full space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  <span>Aplicadas</span>
+              {statistics?.statusDistribution.filter((s) => s.status !== "Total").map((item) => (
+                <div key={item.status} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      item.status === "Aplicadas" ? "bg-primary" :
+                      item.status === "Puladas" ? "bg-yellow-500" :
+                      item.status === "Falhas" ? "bg-red-500" : "bg-slate-500"
+                    }`} />
+                    <span>{item.status}</span>
+                  </div>
+                  <span className="font-bold">
+                    {item.percentage?.toFixed(0) ?? 0}%
+                  </span>
                 </div>
-                <span className="font-bold">
-                  {statistics?.statusDistribution.appliedPercentage.toFixed(0)}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                  <span>Puladas</span>
-                </div>
-                <span className="font-bold">
-                  {statistics?.statusDistribution.skippedPercentage.toFixed(0)}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  <span>Falhas</span>
-                </div>
-                <span className="font-bold">
-                  {statistics?.statusDistribution.failedPercentage.toFixed(0)}%
-                </span>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -298,7 +246,7 @@ export default function DashboardPage() {
             <CardTitle>Candidaturas por Plataforma</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {statistics?.platformDistribution.data.map((platform, index) => (
+            {statistics?.platformDistribution.map((platform, index) => (
               <div key={index}>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-medium">{platform.platform}</span>
@@ -314,8 +262,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {(!statistics?.platformDistribution.data ||
-              statistics.platformDistribution.data.length === 0) && (
+            {(!statistics?.platformDistribution ||
+              statistics.platformDistribution.length === 0) && (
               <p className="text-sm text-slate-500 text-center py-4">
                 Nenhuma plataforma registrada
               </p>
@@ -323,34 +271,25 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Últimas Candidaturas</CardTitle>
-            <button className="text-sm font-semibold text-primary hover:underline">
-              Ver todas
-            </button>
-          </CardHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vaga</TableHead>
-                <TableHead>Plataforma</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loadingJobs ? (
+        {recentApplications.length > 0 && (
+          <Card className="lg:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Últimas Candidaturas</CardTitle>
+            </CardHeader>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                  </TableCell>
+                  <TableHead>Vaga</TableHead>
+                  <TableHead>Plataforma</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ) : recentApps.length > 0 ? (
-                recentApps.map((app, index) => (
+              </TableHeader>
+              <TableBody>
+                {recentApplications.map((app: any, index: number) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <div className="font-medium">{app.title}</div>
+                      <div className="font-medium">{app.title || app.role}</div>
                       <div className="text-xs text-slate-500">
                         {app.company}
                       </div>
@@ -371,17 +310,11 @@ export default function DashboardPage() {
                       </Badge>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-slate-500">
-                    Nenhuma candidatura recente
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

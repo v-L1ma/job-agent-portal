@@ -1,21 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
-  Search,
-  Calendar,
   ExternalLink,
   Globe,
   Sparkles,
-  ArrowLeft,
-  ArrowRight,
   LoaderCircle,
   Building2,
   MoreVertical,
@@ -24,20 +20,15 @@ import {
   Download,
   CheckCircle2,
   X,
-  Clock,
 } from "lucide-react";
 import {
   ApiError,
-  generateCvForJob,
+  getJobs,
   getJobById,
-  getJobCompanyLookup,
-  getJobPlatformLookup,
-  evaluateJob,
-  type JobDetailsResponse,
-  type JobListItem,
-  type GenerateCvResponse,
+  rateJob,
+  generateCvForJob,
+  type Job,
 } from "@/lib/api";
-import { useJobSearch } from "@/hooks/use-job-search";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
   DropdownMenu,
@@ -45,19 +36,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useDebounce } from "@/hooks/use-debounce";
-
-const PAGE_SIZE = 9;
-const ALL_PLATFORMS_VALUE = { label:"Todas as plataformas ",value:"all-platforms"};
-const ALL_COMPANIES_VALUE = { label:"Todas as empresas ",value:"all-companies"};
 
 function truncateText(value: string, length = 190): string {
   if (value.length <= length) {
     return value;
   }
-
   return `${value.slice(0, length).trimEnd()}...`;
 }
 
@@ -65,15 +49,13 @@ function normalizeError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
   }
-
   if (error instanceof Error) {
     return error.message;
   }
-
   return "Ocorreu um erro inesperado.";
 }
 
-function getPlatformBadge(platform: string | undefined) {
+function getPlatformBadge(platform: string) {
   const displayPlatform = platform || "Fonte externa";
 
   switch (displayPlatform.toLowerCase()) {
@@ -117,129 +99,76 @@ function getPlatformBadge(platform: string | undefined) {
 
 export default function ApplicationsPage() {
   const router = useRouter();
-  const { logout } = useAuth();
-  const {
-    jobs: searchJobs,
-    isLoading: isSearching,
-    isPolling,
-    meta: searchMeta,
-    error: searchError,
-    searchJobs: performSearch,
-  } = useJobSearch();
+  const { session, logout } = useAuth();
 
-  const [stackFilter, setStackFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState<{label: string, value: string}>(ALL_COMPANIES_VALUE);
-  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
-  const [platformFilter, setPlatformFilter] = useState(ALL_PLATFORMS_VALUE);
-  const [platformOptions, setPlatformOptions] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
-
-  const debouncedStackFilter = useDebounce(stackFilter, 500);
-
-  const [jobs, setJobs] = useState<JobListItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [hiddenJobIds, setHiddenJobIds] = useState<Set<string>>(new Set());
 
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [selectedJob, setSelectedJob] = useState<JobDetailsResponse | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
   const [generatingForJobId, setGeneratingForJobId] = useState<string | null>(null);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
   const [cvGenerationState, setCvGenerationState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [generatedCv, setGeneratedCv] = useState<GenerateCvResponse | null>(null);
+  const [generatedCv, setGeneratedCv] = useState<{ blob: Blob; fileName: string } | null>(null);
 
   const [feedbackJobId, setFeedbackJobId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [isEvaluating, setIsEvaluating] = useState(false);
 
-  const handleAuthExpiration = useCallback(() => {
+  const {
+    data,
+    isLoading,
+    isError,
+    error: queryError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["jobs"],
+    queryFn: ({ pageParam }) => getJobs(10, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  const allJobs = useMemo(() => data?.pages.flatMap((p) => p.jobs) ?? [], [data]);
+
+  const visibleJobs = useMemo(
+    () => allJobs.filter((j) => !hiddenJobIds.has(j.id)),
+    [allJobs, hiddenJobIds]
+  );
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        void fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, { rootMargin: "200px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  const handleAuthExpiration = () => {
     logout();
     router.replace("/auth/login");
-  }, [logout, router]);
-
-  const jobsCount = jobs.length;
-  const totalItems = searchMeta?.totalItems ?? jobsCount;
-  const totalPages = Math.max(searchMeta?.totalPages ?? 1, 1);
-  const loading = isSearching;
-  const displayedError = error ?? searchError;
-
-  const loadJobs = useCallback(async () => {
-    try {
-      setError(null);
-
-      await performSearch({
-        stack: debouncedStackFilter.trim() || undefined,
-        company: companyFilter.value === ALL_COMPANIES_VALUE.value ? undefined : companyFilter.value,
-        platform: platformFilter.value === ALL_PLATFORMS_VALUE.value ? undefined : platformFilter.value,
-        page,
-        pageSize: PAGE_SIZE,
-      });
-    } catch (loadError) {
-      setError(normalizeError(loadError));
-    }
-  }, [companyFilter, debouncedStackFilter, page, performSearch, platformFilter]);
-
-  useEffect(() => {
-    void loadJobs();
-  }, [loadJobs]);
-
-  useEffect(() => {
-    setJobs(searchJobs);
-  }, [searchJobs]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadCompanies = async () => {
-      try {
-        const companies = await getJobCompanyLookup(undefined, 50);
-        if (isMounted) {
-          setCompanyOptions(companies);
-        }
-      } catch {
-        if (isMounted) {
-          setCompanyOptions([]);
-        }
-      }
-    };
-
-    void loadCompanies();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadPlatforms = async () => {
-      try {
-        const platforms = await getJobPlatformLookup(undefined, 20);
-        if (isMounted) {
-          setPlatformOptions(platforms);
-        }
-      } catch {
-        if (isMounted) {
-          setPlatformOptions([]);
-        }
-      }
-    };
-
-    void loadPlatforms();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  };
 
   const openDetails = async (jobId: string) => {
     try {
       setSelectedJobId(jobId);
       setLoadingDetails(true);
       setDetailsError(null);
-
       const data = await getJobById(jobId);
       setSelectedJob(data);
     } catch (detailsLoadError) {
@@ -259,19 +188,6 @@ export default function ApplicationsPage() {
       const generated = await generateCvForJob(jobId);
       setGeneratedCv(generated);
       setCvGenerationState('success');
-      
-      // Auto-download is still nice, but the user wanted a result UI
-      /*
-      const objectUrl = URL.createObjectURL(generated.blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = generated.fileName;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
-      */
-
     } catch (generateError) {
       setCvGenerationState('error');
       if (generateError instanceof ApiError && generateError.status === 401) {
@@ -279,7 +195,6 @@ export default function ApplicationsPage() {
         handleAuthExpiration();
         return;
       }
-
       setGenerationMessage(normalizeError(generateError));
     } finally {
       setGeneratingForJobId(null);
@@ -299,135 +214,37 @@ export default function ApplicationsPage() {
   };
 
   const handleNotInterested = async () => {
-    if (!feedbackJobId) return;
+    if (!feedbackJobId || !session?.userId) return;
 
     try {
       setIsEvaluating(true);
-      await evaluateJob(feedbackJobId, {
+      await rateJob(feedbackJobId, {
+        userId: session.userId,
         liked: false,
         feedback: feedbackText.trim() || undefined,
       });
-      // Remove from list or just close
-      setJobs(jobs.filter(j => j.id !== feedbackJobId));
+      setHiddenJobIds((prev) => new Set(prev).add(feedbackJobId));
       setFeedbackJobId(null);
       setFeedbackText("");
     } catch (err) {
       console.error(err);
-      setError("Erro ao enviar feedback.");
     } finally {
       setIsEvaluating(false);
     }
   };
 
-  const handleEvaluateCv = async (liked: boolean) => {
-    if (!generatingForJobId && !selectedJobId && !generatedCv) return; 
-    // This is for the generated CV evaluation
-    // For now we'll assume the same endpoint works if we have the jobId
-    const jobId = generatingForJobId || selectedJobId || (generatedCv ? jobs.find(j => true /* matching logic */)?.id : null);
-    // Actually we need the jobId from the context
-  };
-
-  const jobsCounterLabel = useMemo(() => {
-    if (!totalItems) {
-      return "0 vagas encontradas";
-    }
-
-    return `${totalItems} vagas encontradas`;
-  }, [totalItems]);
-
   return (
     <DashboardLayout title="Vagas e Candidaturas">
       <div className="flex flex-col -m-4 md:-m-8">
-        <div className="md:sticky md:-top-8 p-4 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3 shrink-0 px-6 z-10 transition-all">
-          <div className="relative flex items-center w-full md:flex-1 md:max-w-[380px]">
-            <Search className="absolute left-3 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Faça sua busca por vagas (ex: React, .NET, etc)"
-              value={stackFilter}
-              onChange={(event) => {
-                setPage(1);
-                setStackFilter(event.target.value);
-              }}
-              className="pl-10 h-10"
-            />
-          </div>
-
-          <div className="w-full md:w-64 md:h-full">
-            <Select
-              value={companyFilter}
-              onValueChange={(value) => {
-                setPage(1);
-                setCompanyFilter(value ?? ALL_COMPANIES_VALUE);
-              }}
-            >
-              <SelectTrigger 
-                className="h-full w-full"
-              >
-                <SelectValue placeholder="Filtrar por empresa" />
-              </SelectTrigger>
-              <SelectContent side="bottom" align="start" sideOffset={8}>
-                <SelectItem value={ALL_COMPANIES_VALUE}>Todas as empresas</SelectItem>
-                {companyOptions.map((company) => (
-                  <SelectItem key={company} value={{ label: company, value: company }}>
-                    {company}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-full md:w-56 md:h-full">
-            <Select
-              value={platformFilter}
-              onValueChange={(value) => {
-                setPage(1);
-                setPlatformFilter(value ?? ALL_PLATFORMS_VALUE);
-              }}
-            >
-              <SelectTrigger 
-                className="h-full w-full"
-              >
-                <SelectValue placeholder="Filtrar por plataforma" />
-              </SelectTrigger>
-              <SelectContent side="bottom" align="start" sideOffset={8}>
-                <SelectItem value={ALL_PLATFORMS_VALUE}>Todas as plataformas</SelectItem>
-                {platformOptions.map((platform) => (
-                  <SelectItem key={platform} value={{ label: platform, value: platform }}>
-                    {platform}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button className="h-10 px-4" onClick={() => void loadJobs()}>
-            Atualizar
-          </Button>
-
-          <div className="ml-auto text-sm text-slate-500 dark:text-slate-400">{jobsCounterLabel}</div>
-        </div>
-
-        {isPolling && (
+        {isLoading && (
           <div className="px-6 py-3 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800">
-            <div className="flex items-center gap-3">
-              <Clock className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-              <div>
-                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  Buscando vagas nas plataformas...
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Isso pode levar alguns instantes
-                </p>
-              </div>
-            </div>
+            <p className="text-sm text-blue-600 dark:text-blue-400">Carregando vagas...</p>
           </div>
         )}
 
-        {searchError && (
+        {isError && queryError && (
           <div className="px-6 py-3 bg-red-50 dark:bg-red-950/20 border-b border-red-200 dark:border-red-800">
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {searchError}
-            </p>
+            <p className="text-sm text-red-600 dark:text-red-400">{normalizeError(queryError)}</p>
           </div>
         )}
 
@@ -440,31 +257,31 @@ export default function ApplicationsPage() {
         )}
 
         <div className="bg-slate-50/50 dark:bg-slate-900/10 md:flex-1 md:overflow-hidden">
-          <ScrollArea className="h-full hidden md:flex">
+          <ScrollArea className="h-full">
             <div className="p-8 max-w-7xl mx-auto space-y-6">
-              {jobsCount === 0 && (loading || isPolling) && (
+              {isLoading && (
                 <div className="py-16 text-center text-slate-500 dark:text-slate-400">
                   <LoaderCircle className="w-5 h-5 mx-auto mb-2 animate-spin" />
-                  {isPolling ? "Buscando vagas nas plataformas..." : "Carregando vagas..."}
+                  Carregando vagas...
                 </div>
               )}
 
-              {!loading && displayedError && (
+              {!isLoading && isError && (
                 <div className="rounded-lg border border-red-300/40 bg-red-500/10 text-red-500 px-4 py-3 text-sm">
-                  {displayedError}
+                  {normalizeError(queryError)}
                 </div>
               )}
 
-              {!loading && !displayedError && jobsCount === 0 && (
+              {!isLoading && !isError && visibleJobs.length === 0 && (
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Nenhuma vaga encontrada para os filtros aplicados.
+                  Nenhuma vaga encontrada. Configure suas preferências para receber recomendações.
                 </div>
               )}
 
-              {!loading && !displayedError && jobsCount > 0 && (
+              {!isLoading && !isError && visibleJobs.length > 0 && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {jobs.map((job) => (
+                    {visibleJobs.map((job) => (
                       <div
                         key={job.id}
                         className="p-5 rounded-xl border border-slate-200 dark:border-primary/10 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all group flex flex-col min-h-[220px]"
@@ -476,7 +293,7 @@ export default function ApplicationsPage() {
                                 <MoreVertical className="w-4 h-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-fit p-1">
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap"
                                   onClick={() => setFeedbackJobId(job.id)}
                                 >
@@ -523,7 +340,7 @@ export default function ApplicationsPage() {
                               disabled={generatingForJobId === job.id}
                               onClick={() => void handleGenerateCv(job.id)}
                             >
-                              {generatingForJobId === job.id ? "Gerando..." : "Gerar curriculo personalizado"}
+                              {generatingForJobId === job.id ? "Gerando..." : "Gerar currículo personalizado"}
                             </Button>
                           </div>
                         </div>
@@ -531,150 +348,16 @@ export default function ApplicationsPage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Página {page} de {totalPages}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        disabled={page <= 1 || loading}
-                        onClick={() => setPage((value) => Math.max(1, value - 1))}
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        Anterior
-                      </Button>
-                      <Button
-                        variant="outline"
-                        disabled={page >= totalPages || loading}
-                        onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                      >
-                        Próxima
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-4">
+                      <LoaderCircle className="w-5 h-5 animate-spin text-slate-400" />
                     </div>
-                  </div>
+                  )}
+                  <div ref={sentinelRef} className="h-1" />
                 </>
               )}
             </div>
           </ScrollArea>
-
-          <div className="p-8 max-w-7xl mx-auto space-y-6 md:hidden">
-            {jobsCount === 0 && (loading || isPolling) && (
-              <div className="py-16 text-center text-slate-500 dark:text-slate-400">
-                <LoaderCircle className="w-5 h-5 mx-auto mb-2 animate-spin" />
-                {isPolling ? "Buscando vagas nas plataformas..." : "Carregando vagas..."}
-              </div>
-            )}
-
-            {!loading && displayedError && (
-              <div className="rounded-lg border border-red-300/40 bg-red-500/10 text-red-500 px-4 py-3 text-sm">
-                {displayedError}
-              </div>
-            )}
-
-            {!loading && !displayedError && jobsCount === 0 && (
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Nenhuma vaga encontrada para os filtros aplicados.
-              </div>
-            )}
-
-            {!loading && !displayedError && jobsCount > 0 && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {jobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="p-5 rounded-xl border border-slate-200 dark:border-primary/10 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all group flex flex-col min-h-[220px]"
-                    >
-                      <div className="space-y-2 mb-3 relative pr-8">
-                        <div className="absolute top-0 right-0">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger className="h-8 w-8 text-slate-800 hover:text-slate-500 dark:text-white flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer outline-none">
-                              <MoreVertical className="w-4 h-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-fit p-1">
-                              <DropdownMenuItem 
-                                className="text-red-500 gap-2 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30 text-nowrap"
-                                onClick={() => setFeedbackJobId(job.id)}
-                              >
-                                <ThumbsDown className="w-4 h-4" />
-                                Não tenho interesse
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                          {job.title}
-                        </h3>
-                        {job.company && (
-                          <p className="text-xs text-slate-600 dark:text-slate-300 inline-flex items-center gap-1.5">
-                            <Building2 className="w-3.5 h-3.5" />
-                            {job.company}
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          {truncateText(job.description)}
-                        </p>
-                      </div>
-
-                      <div className="mt-auto space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/60">
-                        <div className="flex items-center justify-between">
-                          {getPlatformBadge(job.platform)}
-                          <a
-                            href={job.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-primary inline-flex items-center gap-1"
-                          >
-                            Abrir vaga
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Button variant="outline" className="flex-1" onClick={() => void openDetails(job.id)}>
-                            Ver detalhes
-                          </Button>
-                          <Button
-                            className="flex-1"
-                            disabled={generatingForJobId === job.id}
-                            onClick={() => void handleGenerateCv(job.id)}
-                          >
-                            {generatingForJobId === job.id ? "Gerando..." : "Gerar curriculo personalizado"}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Página {page} de {totalPages}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      disabled={page <= 1 || loading}
-                      onClick={() => setPage((value) => Math.max(1, value - 1))}
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Anterior
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={page >= totalPages || loading}
-                      onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                    >
-                      Próxima
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
         </div>
 
         <Sheet
@@ -716,16 +399,9 @@ export default function ApplicationsPage() {
                           </h2>
                           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 inline-flex items-center gap-2">
                             <Building2 className="w-4 h-4" />
-                            ID plataforma: {selectedJob.plataformJobId}
+                            {selectedJob.company}
                           </p>
                         </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
-                        <span className="inline-flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          Atualizada na API
-                        </span>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
@@ -742,8 +418,8 @@ export default function ApplicationsPage() {
                         >
                           <Sparkles className="w-4 h-4" />
                           {generatingForJobId === selectedJob.id
-                            ? "Gerando curriculo..."
-                            : "Gerar curriculo personalizado"}
+                            ? "Gerando currículo..."
+                            : "Gerar currículo personalizado"}
                         </Button>
                       </div>
                     </header>
@@ -759,35 +435,14 @@ export default function ApplicationsPage() {
 
                     <section className="space-y-3">
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Análise da vaga
+                        Status
                       </h3>
-
-                      {selectedJob.analysis ? (
-                        <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4">
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Skills</p>
-                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                              {selectedJob.analysis.skills}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Nível</p>
-                            <p className="text-sm text-slate-700 dark:text-slate-300">
-                              {selectedJob.analysis.nivel}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Keywords</p>
-                            <p className="text-sm text-slate-700ve dark:text-slate-300">
-                              {selectedJob.analysis.keywords}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Essa vaga ainda não possui análise automática.
-                        </p>
-                      )}
+                      <Badge variant={selectedJob.active ? "default" : "secondary"}>
+                        {selectedJob.active ? "Ativa" : "Inativa"}
+                      </Badge>
+                      <span className="ml-2 text-xs text-slate-500">
+                        {selectedJob.isApplied ? "Candidatura enviada" : "Não candidatado"}
+                      </span>
                     </section>
                   </>
                 )}
@@ -796,7 +451,6 @@ export default function ApplicationsPage() {
           </SheetContent>
         </Sheet>
 
-        {/* Modal feedback "Não tenho interesse" */}
         {feedbackJobId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden scale-in animate-in zoom-in-95 duration-200">
@@ -810,7 +464,7 @@ export default function ApplicationsPage() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Conte-nos por que essa vaga não lhe interessa (opcional, máx 100 caracteres).
                 </p>
@@ -832,8 +486,8 @@ export default function ApplicationsPage() {
                   <Button variant="outline" className="flex-1" onClick={() => setFeedbackJobId(null)}>
                     Cancelar
                   </Button>
-                  <Button 
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white" 
+                  <Button
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                     onClick={handleNotInterested}
                     disabled={isEvaluating}
                   >
@@ -846,12 +500,10 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* Modal de Loading / Sucesso Geração CV */}
         {cvGenerationState !== 'idle' && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="p-8 text-center space-y-6">
-                
                 {cvGenerationState === 'loading' && (
                   <div className="space-y-4 py-4">
                     <div className="relative w-20 h-20 mx-auto">
@@ -902,35 +554,6 @@ export default function ApplicationsPage() {
                         <Download className="mr-2 w-4 h-4" />
                         Baixar currículo agora
                       </Button>
-                      
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60">
-                        <span className="text-xs text-slate-500">O que achou do currículo?</span>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 px-3 rounded-full hover:bg-green-50 dark:hover:bg-green-500/10 hover:text-green-600"
-                            onClick={() => {
-                              // We could call a similar evaluateCv logic
-                              setCvGenerationState('idle');
-                            }}
-                          >
-                            Gostei
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 px-3 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500"
-                            onClick={() => {
-                              setFeedbackJobId(generatingForJobId || selectedJobId);
-                              setCvGenerationState('idle');
-                            }}
-                          >
-                            Não gostei
-                          </Button>
-                        </div>
-                      </div>
-                      
                       <Button variant="ghost" className="text-xs w-full h-10 text-slate-500" onClick={() => setCvGenerationState('idle')}>
                         Fechar
                       </Button>
@@ -954,7 +577,6 @@ export default function ApplicationsPage() {
                     </Button>
                   </div>
                 )}
-
               </div>
             </div>
           </div>

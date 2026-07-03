@@ -17,7 +17,7 @@ import {
   Search,
   Lightbulb,
 } from "lucide-react";
-import { ApiError, getUserPreferences, saveUserPreferences } from "@/lib/api";
+import { ApiError, getUserPreferences, saveUserPreferences, type UserPreference } from "@/lib/api";
 
 const SENIORITY_OPTIONS = ["Estágio", "Junior", "Pleno", "Senior", "Especialista"] as const;
 
@@ -100,9 +100,10 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
   useEffect(() => {
     async function loadPreferences() {
       try {
-        const data = await getUserPreferences();
-        const currentLevels = data.levels ?? [];
-        const currentSkills = data.skills ?? [];
+        const preferences = await getUserPreferences();
+        const pref = preferences[0] ?? { Skills: [], Levels: [] };
+        const currentLevels = pref.Levels ?? [];
+        const currentSkills = pref.Skills ?? [];
 
         reset({
           skills: currentSkills,
@@ -180,7 +181,6 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
       await saveUserPreferences({
         skills: data.skills,
         levels: data.levels,
-        area: "",
       });
 
       setOriginalPreferences({

@@ -5,7 +5,6 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
-import { FirstAccessModal } from "../onboarding/first-access-modal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,7 +13,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const { isAuthenticated, isLoading, session, markOnboardingCompleted } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -42,10 +41,6 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
-      <FirstAccessModal
-        open={Boolean(session?.isFirstAccess)}
-        onCompleted={markOnboardingCompleted}
-      />
     </div>
   );
 }

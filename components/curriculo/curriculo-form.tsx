@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ApiError, uploadUserCv, getUserCv, getGeneratedCvs, type GeneratedCvItem } from "@/lib/api";
+import { downloadGeneratedCv } from "@/lib/api";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
   Accordion,
@@ -132,8 +133,8 @@ export function CurriculoForm({
   useEffect(() => {
     async function loadGeneratedCvs() {
       try {
-        const response = await getGeneratedCvs();
-        setGeneratedCvs(response.items);
+        const items = await getGeneratedCvs();
+        setGeneratedCvs(items);
       } catch (error) {
         console.error("Erro ao carregar currículos gerados:", error);
       } finally {
@@ -215,7 +216,15 @@ export function CurriculoForm({
 
   const handleDownloadGeneratedCv = async (item: GeneratedCvItem) => {
     try {
-      window.open(item.urlFile, "_blank");
+      const { blob, fileName } = await downloadGeneratedCv(item.JobId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erro ao baixar currículo gerado:", error);
     }
@@ -628,7 +637,7 @@ export function CurriculoForm({
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {generatedCvs.map((item) => (
                           <div
-                            key={item.id}
+                            key={item.JobId}
                             className="group p-6 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all"
                           >
                             <div className="flex items-start gap-4 flex-1">
@@ -638,13 +647,13 @@ export function CurriculoForm({
                               <div className="space-y-2 flex-1">
                                 <div className="flex items-center gap-3">
                                   <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                                    {item.fileName}
+                                    {item.Title}
                                   </h4>
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                                   <span className="flex items-center gap-1.5">
                                     <Clock className="w-3.5 h-3.5" />
-                                    {formatDate(item.createdAt)}
+                                    {item.FileName}
                                   </span>
                                 </div>
                               </div>

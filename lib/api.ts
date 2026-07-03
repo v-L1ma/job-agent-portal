@@ -1,158 +1,216 @@
 import api from "@/lib/axios-instance";
 import { isAxiosError } from "axios";
 
-interface ProblemDetails {
-  title?: string;
-  detail?: string;
-  status?: number;
-}
+// ─── Auth ───────────────────────────────────────────────────────────────────
 
 export interface LoginPayload {
   email: string;
   password: string;
 }
 
-export interface ForgotPasswordPayload {
-  email: string;
+export interface LoginResponse {
+  message: string;
+  token: string;
 }
 
 export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
-  role: string;
+  confirmPassword: string;
 }
 
-export interface UpdateUserProfilePayload {
-  name?: string;
-  email?: string;
-  currentPassword?: string;
-  newPassword?: string;
-  confirmNewPassword?: string;
+export interface ForgotPasswordPayload {
+  email: string;
 }
 
-export interface GetUserProfileResponse {
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+// ─── Profile ────────────────────────────────────────────────────────────────
+
+export interface UserProfileResponse {
   id: string;
   name: string;
   email: string;
   cpf?: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  refreshToken: string;
-  isFirstAccess: boolean;
+export interface UpdateProfilePayload {
+  name: string;
+  email: string;
 }
 
-export interface JobsQuery {
-  stack?: string;
-  location?: string;
-  company?: string;
-  platform?: string;
-  page?: number;
-  pageSize?: number;
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
 }
 
-export interface JobListItem {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-  isApplied: boolean;
-  company?: string;
-  location?: string;
-  platform?: string;
-}
-
-export interface PagedJobsResponse {
-  items: JobListItem[];
-  totalItems: number;
-  currentPage: number;
-  totalPages: number;
-}
-
-export interface JobAnalysis {
-  skills: string;
-  nivel: string;
-  keywords: string;
-}
-
-export interface JobDetailsResponse {
-  id: string;
-  plataformJobId: string;
-  title: string;
-  company?: string;
-  platform?: string;
-  description: string;
-  url: string;
-  isApplied: boolean;
-  analysis: JobAnalysis | null;
-}
+// ─── Preferences ────────────────────────────────────────────────────────────
 
 export interface SavePreferencesPayload {
   skills: string[];
   levels: string[];
-  area: string;
 }
 
-export interface SavePreferencesResponse {
-  id: string;
-}
-
-export interface UploadCvResponse {
-  url: string;
-}
-
-export interface UserCvResponse {
-  blob: Blob;
-  fileName: string;
-  fileSize: number;
-  uploadedAt: string;
-}
-
-export interface GeneratedCvItem {
-  id: string;
-  urlFile: string;
-  createdAt: string;
-  fileName: string;
-}
-
-export interface GenerateCvResponse {
-  blob: Blob;
-  fileName: string;
-  storageUrl: string | null;
-}
-
-export interface GeneratedCvListResponse {
-  items: GeneratedCvItem[];
-  total: number;
+export interface UserPreference {
+  UserId: string;
+  Skills: string[];
+  Levels: string[];
 }
 
 export interface UserPreferencesResponse {
-  skills: string[];
-  levels: string[];
-  area: string;
+  message: string;
+  data: UserPreference[];
 }
 
-export interface CompanyLookupResponse {
-  companies: string[];
+// ─── Jobs ───────────────────────────────────────────────────────────────────
+
+export interface ListJobsResponse {
+  jobs: Job[];
+  nextCursor?: string;
 }
 
-export interface PlatformLookupResponse {
-  platforms: string[];
+export interface Job {
+  id: string;
+  plataformJobId: string;
+  title: string;
+  description: string;
+  url: string;
+  isApplied: boolean;
+  status: string;
+  active: boolean;
+  createdBy: string;
+  createdAt: string;
+  lastModifiedBy: string;
+  lastModifiedAt: string;
+  platform: string;
+  company: string;
 }
 
-export interface CompleteOnboardingResponse {
-  isFirstAccess: boolean;
+export interface RateJobPayload {
+  userId: string;
+  liked: boolean;
+  feedback?: string;
+}
+
+// ─── CV ─────────────────────────────────────────────────────────────────────
+
+export interface UploadCvResponse {
+  filename: string;
+  size: number;
+  type: string;
+  content: string;
+  response: {
+    Nome: string;
+    Email: string;
+    Telefone: string;
+    Linkedin: string;
+    Github: string;
+    Resumo: string;
+    Skills: string[];
+    Experiencias: {
+      Cargo: string;
+      Empresa: string;
+      DataInicio: string;
+      DataFim: string;
+      Descricao: string;
+    }[];
+    Educacao: {
+      Curso: string;
+      Instituicao: string;
+      DataInicio: string;
+      DataFim: string;
+    }[];
+  };
+}
+
+export interface GeneratedCvItem {
+  UserId: string;
+  JobId: string;
+  Title: string;
+  FileName: string;
+  ExtractedText: string;
+}
+
+export interface GeneratedCvListResponse {
+  message: string;
+  data: GeneratedCvItem[];
+}
+
+// ─── Statistics ─────────────────────────────────────────────────────────────
+
+export interface StatisticsTotal {
+  count: number;
+  variation: number;
+  variationLabel: string;
+}
+
+export interface StatisticsApplied {
+  count: number;
+  successRate: number;
+}
+
+export interface StatisticsSkipped {
+  count: number;
+  label: string;
+}
+
+export interface StatisticsFailures {
+  count: number;
+  thisWeek: number;
+}
+
+export interface ApplicationsPerDay {
+  date: string;
+  count: number;
+}
+
+export interface PlatformDistribution {
+  platform: string;
+  count: number;
+}
+
+export interface StatusDistribution {
+  status: string;
+  count: number;
+  percentage?: number;
+}
+
+export interface UserStatisticsResponse {
+  message: string;
+  data: {
+    total: StatisticsTotal;
+    applied: StatisticsApplied;
+    skipped: StatisticsSkipped;
+    failures: StatisticsFailures;
+    applicationsPerDay: ApplicationsPerDay[];
+    platformDistribution: PlatformDistribution[];
+    statusDistribution: StatusDistribution[];
+    recentApplications: never[];
+  };
+}
+
+// ─── Error handling ─────────────────────────────────────────────────────────
+
+interface ApiErrorBody {
+  error?: string;
+  errors?: Record<string, string>;
 }
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly fieldErrors?: Record<string, string>;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, fieldErrors?: Record<string, string>) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.fieldErrors = fieldErrors;
   }
 }
 
@@ -171,13 +229,14 @@ function getFileNameFromContentDisposition(headerValue: string | null): string |
 
 function toApiError(error: unknown, fallbackMessage: string): ApiError {
   if (isAxiosError(error)) {
-    const problem = error.response?.data as ProblemDetails | undefined;
+    const body = error.response?.data as ApiErrorBody | undefined;
+
     const message =
-      (typeof problem?.detail === "string" && problem.detail) ||
-      (typeof problem?.title === "string" && problem.title) ||
+      body?.error ??
+      (body?.errors ? Object.values(body.errors).join("; ") : null) ??
       fallbackMessage;
 
-    return new ApiError(message, error.response?.status ?? 500);
+    return new ApiError(message, error.response?.status ?? 500, body?.errors);
   }
 
   if (error instanceof ApiError) {
@@ -191,135 +250,143 @@ function toApiError(error: unknown, fallbackMessage: string): ApiError {
   return new ApiError(fallbackMessage, 500);
 }
 
+// ─── Auth functions ─────────────────────────────────────────────────────────
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   try {
-    const response = await api.post<LoginResponse>("/api/auth/login", payload);
+    const response = await api.post<LoginResponse>("/login", payload);
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível realizar o login.");
   }
 }
 
-export async function register(payload: RegisterPayload): Promise<string> {
+export async function register(payload: RegisterPayload): Promise<void> {
   try {
-    const response = await api.post<string>("/api/auth/register", payload);
-    return response.data;
+    await api.post("/register", payload);
   } catch (error) {
     throw toApiError(error, "Não foi possível concluir o cadastro.");
   }
 }
 
-export async function forgotPassword(payload: ForgotPasswordPayload): Promise<string> {
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string; resetToken: string }> {
   try {
-    const response = await api.post<string>("/api/auth/forgot-password", payload);
+    const response = await api.post<{ message: string; resetToken: string }>("/forgot-password", payload);
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível enviar o link de recuperação.");
   }
 }
 
-export async function getUserProfile(): Promise<GetUserProfileResponse> {
+export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
   try {
-    const response = await api.get<GetUserProfileResponse>("/api/users/profile");
-    return response.data;
+    await api.post("/reset-password", payload);
+  } catch (error) {
+    throw toApiError(error, "Não foi possível redefinir a senha.");
+  }
+}
+
+// ─── Profile functions ──────────────────────────────────────────────────────
+
+export async function getUserProfile(): Promise<UserProfileResponse> {
+  try {
+    const response = await api.get<{ message: string; data: UserProfileResponse }>("/users/profile");
+    return response.data.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar seu perfil.");
   }
 }
 
-export async function updateUserProfile(payload: UpdateUserProfilePayload): Promise<void> {
+export async function updateUserProfile(payload: UpdateProfilePayload): Promise<void> {
   try {
-    await api.patch("/api/users/profile", payload);
+    await api.put("/users/profile", payload);
   } catch (error) {
     throw toApiError(error, "Não foi possível atualizar seu perfil.");
   }
 }
 
-export async function getJobs(query: JobsQuery): Promise<PagedJobsResponse> {
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
   try {
-    const response = await api.get<PagedJobsResponse>("/api/jobs/search", {
-      params: query,
-    });
+    await api.put("/users/change-password", payload);
+  } catch (error) {
+    throw toApiError(error, "Não foi possível alterar sua senha.");
+  }
+}
+
+// ─── Preferences functions ──────────────────────────────────────────────────
+
+export async function saveUserPreferences(payload: SavePreferencesPayload): Promise<void> {
+  try {
+    await api.post("/users/preferences", payload);
+  } catch (error) {
+    throw toApiError(error, "Não foi possível salvar suas preferências.");
+  }
+}
+
+export async function getUserPreferences(): Promise<UserPreference[]> {
+  try {
+    const response = await api.get<UserPreferencesResponse>("/users/preferences");
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar suas preferências.");
+  }
+}
+
+// ─── Jobs functions ─────────────────────────────────────────────────────────
+
+export async function getJobs(limit = 10, cursor?: string): Promise<ListJobsResponse> {
+  try {
+    const params: Record<string, string> = { limit: String(limit) };
+    if (cursor) {
+      params.cursor = cursor;
+    }
+    const response = await api.get<ListJobsResponse>("/jobs", { params });
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível buscar as vagas.");
   }
 }
 
-export async function getJobById(id: string): Promise<JobDetailsResponse> {
+export async function getJobById(jobId: string): Promise<Job> {
   try {
-    const response = await api.get<JobDetailsResponse>(`/api/jobs/${id}`);
+    const response = await api.get<Job>(`/jobs/${jobId}`);
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar os detalhes da vaga.");
   }
 }
 
-export async function getUserPreferences(): Promise<UserPreferencesResponse> {
+export async function rateJob(jobId: string, payload: RateJobPayload): Promise<void> {
   try {
-    const response = await api.get<UserPreferencesResponse>("/api/users/preferences");
-    return response.data;
+    await api.post(`/jobs/${jobId}/rate`, payload);
   } catch (error) {
-    throw toApiError(error, "Não foi possível carregar suas preferências.");
+    throw toApiError(error, "Não foi possível enviar sua avaliação.");
   }
 }
 
-export async function getJobCompanyLookup(search?: string, limit = 20): Promise<string[]> {
+export async function generateCvForJob(jobId: string): Promise<{ blob: Blob; fileName: string }> {
   try {
-    const response = await api.get<CompanyLookupResponse>("/api/jobs/companies/lookup", {
-      params: {
-        search,
-        limit,
-      },
-    });
+    const response = await api.post(`/jobs/${jobId}/cv`, null, { responseType: "blob" });
 
-    return response.data.companies ?? [];
+    const blob = response.data as Blob;
+    const fileName =
+      getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
+      "curriculo-personalizado.pdf";
+
+    return { blob, fileName };
   } catch (error) {
-    throw toApiError(error, "Não foi possível carregar as empresas disponíveis.");
+    throw toApiError(error, "Não foi possível gerar o currículo para esta vaga.");
   }
 }
 
-export async function getJobPlatformLookup(search?: string, limit = 20): Promise<string[]> {
-  try {
-    const response = await api.get<PlatformLookupResponse>("/api/jobs/platforms/lookup", {
-      params: {
-        search,
-        limit,
-      },
-    });
-
-    return response.data.platforms ?? [];
-  } catch (error) {
-    throw toApiError(error, "Não foi possível carregar as plataformas disponíveis.");
-  }
-}
-
-export async function saveUserPreferences(
-  payload: SavePreferencesPayload
-): Promise<SavePreferencesResponse> {
-  try {
-    const response = await api.post<SavePreferencesResponse>("/api/users/preferences", payload);
-    return response.data;
-  } catch (error) {
-    throw toApiError(error, "Não foi possível salvar suas preferências.");
-  }
-}
-
-export async function completeOnboarding(): Promise<CompleteOnboardingResponse> {
-  try {
-    const response = await api.post<CompleteOnboardingResponse>("/api/users/onboarding/complete");
-    return response.data;
-  } catch (error) {
-    throw toApiError(error, "Não foi possível concluir o onboarding.");
-  }
-}
+// ─── CV functions ───────────────────────────────────────────────────────────
 
 export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("cv", file);
 
   try {
-    const response = await api.post<UploadCvResponse>("/api/users/cv", formData, {
+    const response = await api.post<UploadCvResponse>("/users/cv", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -330,9 +397,9 @@ export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   }
 }
 
-export async function getUserCv(): Promise<UserCvResponse> {
+export async function getUserCv(): Promise<{ blob: Blob; fileName: string; fileSize: number; uploadedAt: string }> {
   try {
-    const response = await api.get("/api/users/cv", { responseType: "blob" });
+    const response = await api.get("/users/cv", { responseType: "blob" });
 
     const blob = response.data as Blob;
     const fileNameFromHeader = response.headers["x-cv-file-name"] as string | undefined;
@@ -358,23 +425,23 @@ export async function getUserCv(): Promise<UserCvResponse> {
   }
 }
 
-export async function getGeneratedCvs(): Promise<GeneratedCvListResponse> {
+export async function getGeneratedCvs(): Promise<GeneratedCvItem[]> {
   try {
-    const response = await api.get<GeneratedCvListResponse>("/api/users/generated-cvs");
-    return response.data;
+    const response = await api.get<GeneratedCvListResponse>("/users/cv/generated");
+    return response.data.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar a lista de currículos gerados.");
   }
 }
 
-export async function downloadGeneratedCv(id: string): Promise<{ blob: Blob; fileName: string }> {
+export async function downloadGeneratedCv(cvId: string): Promise<{ blob: Blob; fileName: string }> {
   try {
-    const response = await api.get(`/api/users/generated-cvs/${id}`, { responseType: "blob" });
+    const response = await api.get(`/users/cv/${cvId}`, { responseType: "blob" });
 
     const blob = response.data as Blob;
     const fileName =
       getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
-      `curriculo-gerado-${id}.pdf`;
+      `curriculo-gerado-${cvId}.pdf`;
 
     return { blob, fileName };
   } catch (error) {
@@ -382,35 +449,13 @@ export async function downloadGeneratedCv(id: string): Promise<{ blob: Blob; fil
   }
 }
 
-export async function generateCvForJob(jobId: string): Promise<GenerateCvResponse> {
+// ─── Statistics ─────────────────────────────────────────────────────────────
+
+export async function getUserStatistics(): Promise<UserStatisticsResponse> {
   try {
-    const response = await api.post("/api/users/cv/generate", { jobId }, { responseType: "blob" });
-
-    const blob = response.data as Blob;
-    const fileName =
-      getFileNameFromContentDisposition(response.headers["content-disposition"]) ??
-      "curriculo-personalizado.pdf";
-    const storageUrl = response.headers["x-generated-cv-url"];
-
-    return {
-      blob,
-      fileName,
-      storageUrl,
-    };
+    const response = await api.get<UserStatisticsResponse>("/users/statistics");
+    return response.data;
   } catch (error) {
-    throw toApiError(error, "Não foi possível gerar o currículo para esta vaga.");
-  }
-}
-
-export interface EvaluateJobPayload {
-  liked: boolean;
-  feedback?: string;
-}
-
-export async function evaluateJob(id: string, payload: EvaluateJobPayload): Promise<void> {
-  try {
-    await api.post(`/api/jobs/${id}/evaluate`, payload);
-  } catch (error) {
-    throw toApiError(error, "Não foi possível enviar sua avaliação.");
+    throw toApiError(error, "Não foi possível carregar as estatísticas.");
   }
 }
