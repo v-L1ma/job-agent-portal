@@ -190,12 +190,10 @@ export default function VagasPage() {
   // Send rateJob mutation for ThumbsDown
   const handleNotInterested = async () => {
     if (!feedbackJobId || !session?.user) return;
-    const userId = (session.user as any).id || "1";
 
     try {
       setIsSubmittingFeedback(true);
       await rateJob(feedbackJobId, {
-        userId,
         liked: false,
         feedback: feedbackText.trim() || undefined,
       });

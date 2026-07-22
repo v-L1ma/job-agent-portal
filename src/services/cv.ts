@@ -7,7 +7,7 @@ export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
   formData.append("cv", file);
 
   try {
-    const response = await api.post<UploadCvResponse>("/users/cv", formData, {
+    const response = await api.post<UploadCvResponse>("/cv", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -20,7 +20,7 @@ export async function uploadUserCv(file: File): Promise<UploadCvResponse> {
 
 export async function getUserCv(): Promise<{ blob: Blob; fileName: string; fileSize: number; uploadedAt: string }> {
   try {
-    const response = await api.get("/users/cv", { responseType: "blob" });
+    const response = await api.get("/cv", { responseType: "blob" });
 
     const blob = response.data as Blob;
     const fileNameFromHeader = response.headers["x-cv-file-name"] as string | undefined;
@@ -48,7 +48,7 @@ export async function getUserCv(): Promise<{ blob: Blob; fileName: string; fileS
 
 export async function getGeneratedCvs(): Promise<GeneratedCvItem[]> {
   try {
-    const response = await api.get<GeneratedCvListResponse>("/users/cv/generated");
+    const response = await api.get<GeneratedCvListResponse>("/cv/generated");
     return response.data.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar a lista de currículos gerados.");
@@ -57,7 +57,7 @@ export async function getGeneratedCvs(): Promise<GeneratedCvItem[]> {
 
 export async function downloadGeneratedCv(cvId: string): Promise<{ blob: Blob; fileName: string }> {
   try {
-    const response = await api.get(`/users/cv/${cvId}`, { responseType: "blob" });
+    const response = await api.get(`/cv/${cvId}`, { responseType: "blob" });
 
     const blob = response.data as Blob;
     const fileName =

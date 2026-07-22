@@ -21,7 +21,6 @@ export interface Job {
 }
 
 export interface RateJobPayload {
-  userId: string;
   liked: boolean;
   feedback?: string;
 }
