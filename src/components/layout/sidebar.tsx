@@ -52,9 +52,9 @@ export function SidebarMain() {
       <SidebarHeader className={cn("flex h-16 items-center border-b border-trampo-border justify-center transition-all", isCollapsed ? "px-2" : "px-4")}>
         <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden h-8 w-full justify-center">
           {isCollapsed ? (
-            <div className="w-8 h-8 flex items-center justify-center bg-trampo-primary-500 rounded-lg overflow-hidden border border-trampo-primary-500/20 shrink-0">
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg overflow-hidden shrink-0">
               <Image
-                src="/assets/logo-white.png"
+                src="/assets/logo-mini.svg"
                 alt="Trampo Logo Icon"
                 width={20}
                 height={20}
