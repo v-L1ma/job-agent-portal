@@ -9,7 +9,7 @@ export async function saveUserPreferences(payload: SavePreferencesPayload): Prom
   }
 }
 
-export async function getUserPreferences(): Promise<UserPreference[]> {
+export async function getUserPreferences(): Promise<UserPreference> {
   try {
     const response = await api.get<UserPreferencesResponse>("/preferences");
     return response.data.data;

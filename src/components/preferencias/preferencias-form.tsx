@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,6 +30,7 @@ const preferencesSchema = z.object({
     .array(z.string())
     .min(1, "Selecione pelo menos uma senioridade.")
     .max(4, "Selecione no máximo 4 senioridades."),
+  precision: z.number().min(1).max(100),
 });
 
 type PreferencesFormValues = z.infer<typeof preferencesSchema>;
@@ -37,6 +38,7 @@ type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 type OriginalPreferences = {
   skills: string[];
   levels: string[];
+  precision: number;
 };
 
 type Message = {
@@ -55,6 +57,7 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<Message | null>(null);
+  const [sliderTemp, setSliderTemp] = useState<number | null>(null);
   const [originalPreferences, setOriginalPreferences] = useState<OriginalPreferences | null>(null);
 
   const {
@@ -68,11 +71,13 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
     defaultValues: {
       skills: [],
       levels: [],
+      precision: 70,
     },
   });
 
   const keywords = watch("skills") || [];
   const levels = watch("levels") || [];
+  const precision = watch("precision");
 
   const hasChanges = (() => {
     if (!originalPreferences) {
@@ -81,26 +86,29 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
 
     const keywordsChanged = JSON.stringify(keywords) !== JSON.stringify(originalPreferences.skills);
     const levelsChanged = JSON.stringify(levels) !== JSON.stringify(originalPreferences.levels);
+    const precisionChanged = precision !== originalPreferences.precision;
 
-    return keywordsChanged || levelsChanged;
+    return keywordsChanged || levelsChanged || precisionChanged;
   })();
 
   useEffect(() => {
     async function loadPreferences() {
       try {
-        const preferences = await getUserPreferences();
-        const pref = preferences[0] ?? { Skills: [], Levels: [] };
-        const currentLevels = pref.Levels ?? [];
-        const currentSkills = pref.Skills ?? [];
+        const pref = await getUserPreferences();
+        const currentLevels = pref?.Levels ?? [];
+        const currentSkills = pref?.Keywords ?? [];
+        const currentPrecision = (pref?.SimilarityPercent ?? 0) * 100;
 
         reset({
           skills: currentSkills,
           levels: currentLevels,
+          precision: currentPrecision,
         });
 
         setOriginalPreferences({
           skills: currentSkills,
           levels: currentLevels,
+          precision: currentPrecision,
         });
       } catch (error) {
         console.error("Erro ao carregar preferências:", error);
@@ -169,11 +177,13 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
       await saveUserPreferences({
         skills: data.skills,
         levels: data.levels,
+        precision: data.precision / 100,
       });
 
       setOriginalPreferences({
         skills: data.skills,
         levels: data.levels,
+        precision: data.precision,
       });
 
       setMessage({ text: "Preferências salvas com sucesso!", type: "success" });
@@ -339,6 +349,64 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
         </div>
       </section>
 
+      {/* Precision Section */}
+      <section className="space-y-4 p-6 rounded-2xl border border-trampo-border bg-white shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+        <div className="flex flex-col gap-1">
+          <Label className="text-sm font-bold text-trampo-dark">
+            Precisão das Vagas
+          </Label>
+          <p className="text-xs text-trampo-muted font-semibold font-sans">
+            Ajuste a precisão da busca. Quanto maior, mais rigorosa será a filtragem.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 pt-2">
+          <input
+            type="range"
+            min={1}
+            max={100}
+            step={0.5}
+            value={sliderTemp ?? precision}
+            onChange={(e) => setSliderTemp(Number(e.target.value))}
+            onMouseUp={() => {
+              if (sliderTemp !== null) {
+                setValue("precision", sliderTemp, { shouldValidate: true });
+                setSliderTemp(null);
+              }
+            }}
+            onTouchEnd={() => {
+              if (sliderTemp !== null) {
+                setValue("precision", sliderTemp, { shouldValidate: true });
+                setSliderTemp(null);
+              }
+            }}
+            style={{ "--fill": `${(sliderTemp ?? precision)}%` } as React.CSSProperties}
+            className="flex-1 h-6"
+          />
+          <input
+            type="number"
+            min={1}
+            max={100}
+            step={0.5}
+            value={precision}
+            onChange={(e) => {
+              const val = Math.min(100, Math.max(1, Number(e.target.value)));
+              setValue("precision", val, { shouldValidate: true });
+            }}
+            className="w-20 rounded-xl border border-trampo-border focus:border-trampo-primary-500 focus:ring-1 focus:ring-trampo-primary-500 text-xs py-2 px-3 text-center font-bold"
+          />
+        </div>
+
+        <div className="flex justify-between px-1">
+          <p className="text-[9px] uppercase font-bold tracking-wider text-trampo-muted">
+            1 (menos preciso)
+          </p>
+          <p className="text-[9px] uppercase font-bold tracking-wider text-trampo-muted">
+            100 (mais preciso)
+          </p>
+        </div>
+      </section>
+
       {/* Seniority Section */}
       <section className="space-y-4 p-6 rounded-2xl border border-trampo-border bg-white shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
         <div className="flex flex-col gap-1">
@@ -404,8 +472,10 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
                 reset({
                   skills: originalPreferences.skills,
                   levels: originalPreferences.levels,
+                  precision: originalPreferences.precision,
                 });
               }
+              setSliderTemp(null);
               setMessage(null);
             }}
             disabled={!hasChanges}
@@ -417,7 +487,6 @@ export function PreferenciasForm({ mode = "page", onSaved }: PreferenciasFormPro
           type="button"
           className="rounded-xl bg-trampo-primary-500 hover:bg-trampo-primary-400 text-white font-bold text-xs h-9 shadow-md shadow-trampo-primary-500/10 cursor-pointer px-6 inline-flex items-center gap-1.5"
           onClick={handleSubmit(onSave)}
-          disabled={saving || (!isModal && !hasChanges)}
         >
           {saving ? (
             <>
