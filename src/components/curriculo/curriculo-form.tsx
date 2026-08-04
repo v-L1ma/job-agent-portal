@@ -570,7 +570,7 @@ export function CurriculoForm({
                   variant="secondary"
                   className="bg-purple-100 hover:bg-purple-100 text-purple-700 text-xs font-extrabold px-2.5 py-0.5 rounded-lg border-none"
                 >
-                  {generatedCvs.length} gerados
+                  {generatedCvs?.length ?? 0} gerados
                 </Badge>
               </AccordionTrigger>
 
@@ -581,7 +581,7 @@ export function CurriculoForm({
                       <LoaderCircle className="w-8 h-8 animate-spin text-purple-500" />
                       <p className="text-xs text-trampo-muted font-semibold">Carregando currículos gerados...</p>
                     </div>
-                  ) : generatedCvs.length === 0 ? (
+                  ) : generatedCvs?.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 space-y-3">
                       <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-400">
                         <Sparkles className="w-6 h-6" />
@@ -595,7 +595,7 @@ export function CurriculoForm({
                     </div>
                   ) : (
                     <div className="divide-y divide-neutral-100">
-                      {generatedCvs.map((item) => (
+                      {generatedCvs?.map((item) => (
                         <div
                           key={item.JobId}
                           className="group py-4 flex items-center justify-between gap-4 hover:bg-neutral-50/50 rounded-xl px-2 transition-all"
