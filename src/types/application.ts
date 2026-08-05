@@ -2,6 +2,8 @@ export interface ApplicationQuestion {
   id: string;
   question: string;
   answer: string;
+  type: string;
+  options?: string[];
 }
 
 export interface Application {

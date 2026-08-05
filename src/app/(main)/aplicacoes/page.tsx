@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { FileText, XCircle } from "lucide-react";
+import { FileText, XCircle, Pencil, Check, X, Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getApplications } from "@/services/application";
+import { getApplications, updateQuestion } from "@/services/application";
 import { Application } from "@/types/application";
 import { PlatformBadge } from "@/components/jobs/platform-badge";
 
@@ -39,8 +40,11 @@ function mapApplication(app: Application) {
     data: formatDate(app.createdAt),
     status: statusMap[app.status] || "Pendente",
     respostas: app.questions.map((q) => ({
+      id: q.id,
       pergunta: q.question,
       resposta: q.answer,
+      tipo: q.type,
+      opcoes: q.options,
     })),
   };
 }
@@ -49,6 +53,10 @@ const headers = ["Título", "Empresa", "Plataforma", "Perguntas", "Data", "Statu
 
 export default function AplicacoesPage() {
   const { status: sessionStatus } = useSession();
+  const queryClient = useQueryClient();
+
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const {
     data,
@@ -62,8 +70,34 @@ export default function AplicacoesPage() {
     enabled: sessionStatus === "authenticated",
   });
 
+  const mutation = useMutation({
+    mutationFn: ({ questionId, answer }: { questionId: string; answer: string }) =>
+      updateQuestion(questionId, { answer }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      setEditingKey(null);
+      setEditValue("");
+    },
+  });
+
   const aplicacoes = data?.data.map(mapApplication) ?? [];
   const showSkeleton = sessionStatus === "loading" || (isLoading && aplicacoes.length === 0);
+
+  function handleEdit(aplicacaoId: string, index: number, respostaId: string, respostaAtual: string) {
+    const key = `${aplicacaoId}-${index}`;
+    setEditingKey(key);
+    setEditValue(respostaAtual);
+  }
+
+  function handleCancel() {
+    setEditingKey(null);
+    setEditValue("");
+    mutation.reset();
+  }
+
+  function handleSave(questionId: string) {
+    mutation.mutate({ questionId, answer: editValue });
+  }
 
   return (
     <div className="w-full">
@@ -160,15 +194,97 @@ export default function AplicacoesPage() {
                           Respostas
                         </span>
                       </div>
-                      {aplicacao.respostas.map((resposta, index) => (
-                        <div
-                          key={index}
-                          className="grid grid-cols-[1.5fr_1fr_1fr_0.7fr_0.8fr_0.8fr] gap-2 items-start w-full border-t border-trampo-border px-5 py-2"
-                        >
-                          <span className="col-span-3 text-sm text-trampo-muted">{resposta.pergunta}</span>
-                          <span className="col-span-3 text-sm text-trampo-muted">{resposta.resposta}</span>
-                        </div>
-                      ))}
+                      {aplicacao.respostas.map((resposta, index) => {
+                        const key = `${aplicacao.id}-${index}`;
+                        const isEditing = editingKey === key;
+
+                        return (
+                          <div
+                            key={index}
+                            className="grid grid-cols-[1.5fr_1fr_1fr_0.7fr_0.8fr_0.8fr] gap-2 items-start w-full border-t border-trampo-border px-5 py-2"
+                          >
+                            <span className="col-span-3 text-sm text-trampo-muted">{resposta.pergunta}</span>
+                            <div className="col-span-3 flex items-start gap-2">
+                              {isEditing ? (
+                                <>
+                                  {(resposta.tipo === "select" || resposta.tipo === "radio") && resposta.opcoes ? (
+                                    <select
+                                      className="flex-1 text-sm text-trampo-dark border border-trampo-border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-trampo-primary-500 focus:border-transparent"
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                    >
+                                      {resposta.opcoes.map((opt) => (
+                                        <option key={opt} value={opt}>
+                                          {opt}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : resposta.tipo === "numeric" ? (
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={99}
+                                      className="flex-1 text-sm text-trampo-dark border border-trampo-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-trampo-primary-500 focus:border-transparent"
+                                      value={editValue}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === "" || (Number(val) >= 0 && Number(val) <= 99)) {
+                                          setEditValue(val);
+                                        }
+                                      }}
+                                    />
+                                  ) : (
+                                    <textarea
+                                      className="flex-1 text-sm text-trampo-dark border border-trampo-border rounded-lg px-3 py-2 resize-y min-h-[60px] focus:outline-none focus:ring-2 focus:ring-trampo-primary-500 focus:border-transparent"
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                      rows={3}
+                                    />
+                                  )}
+                                  <div className="flex flex-col gap-1 shrink-0">
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      className="h-7 w-7 bg-trampo-primary-600 hover:bg-trampo-primary-700 text-white rounded-lg"
+                                      onClick={() => handleSave(resposta.id)}
+                                      disabled={mutation.isPending}
+                                    >
+                                      {mutation.isPending ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <Check className="h-3.5 w-3.5" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      variant="outline"
+                                      className="h-7 w-7 border-trampo-border text-trampo-muted hover:bg-neutral-100 rounded-lg"
+                                      onClick={handleCancel}
+                                      disabled={mutation.isPending}
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="flex-1 text-sm text-trampo-muted">{resposta.resposta}</span>
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 shrink-0 text-trampo-muted hover:text-trampo-primary-600 hover:bg-trampo-primary-50 rounded-lg"
+                                    onClick={() => handleEdit(aplicacao.id, index, resposta.id, resposta.resposta)}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </AccordionContent>
                   </AccordionItem>
                 ) : (

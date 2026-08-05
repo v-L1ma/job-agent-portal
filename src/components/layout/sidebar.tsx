@@ -36,14 +36,15 @@ export function SidebarMain() {
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Vagas", href: "/vagas", icon: Briefcase },
+    { name: "Aplicações", href: "/aplicacoes", icon: Layers },
     { name: "Currículo", href: "/curriculo", icon: FileText },
     { name: "Preferências", href: "/preferencias", icon: Settings },
   ];
 
   // Admin items
   const adminItems = [
-    { name: "Scrapers", href: "/scrapers", icon: Cpu },
-    { name: "Aplicações", href: "/aplicacoes", icon: Layers },
+    { name: "Scrapers", href: "/admin/scrapers", icon: Cpu },
+    { name: "Aplicações", href: "/admin/aplicacoes", icon: Layers },
   ];
 
   return (
