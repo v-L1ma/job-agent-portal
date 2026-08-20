@@ -16,6 +16,12 @@ export async function proxy(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/admin")) {
+    if (!token || token.role?.toLocaleLowerCase() !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
   // Redirect logged in users away from auth routes to /dashboard
   if (
     pathname === "/login" ||
@@ -33,6 +39,7 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/admin/:path*",
     "/login",
     "/register",
     "/forgot-password"
