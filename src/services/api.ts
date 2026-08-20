@@ -1,8 +1,17 @@
 import axios from "axios";
 import { getSession, signOut } from "next-auth/react";
 
+export const API_URL =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:1323/api/v1";
+
+if (API_URL.includes("localhost") && process.env.NODE_ENV === "production") {
+  console.error("[api] API_URL apontando para localhost em produção. Configure API_URL ou NEXT_PUBLIC_API_URL no host.");
+}
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:1323/api/v1",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
