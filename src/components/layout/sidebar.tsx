@@ -8,6 +8,7 @@ import {
   Layers,
   LayoutDashboard,
   Settings,
+  Shield,
   Star
 } from "lucide-react";
 import Image from "next/image";
@@ -26,8 +27,10 @@ import {
   SidebarMenuButton,
   useSidebar
 } from "@/components/ui/sidebar";
+import { useSession } from "next-auth/react";
 
 export function SidebarMain() {
+  const { data: session } = useSession();
   const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -44,6 +47,7 @@ export function SidebarMain() {
   // Admin items
   const adminItems = [
     { name: "Scrapers", href: "/admin/scrapers", icon: Cpu },
+    { name: "Cargos", href: "/admin/roles", icon: Shield },
     { name: "Aplicações", href: "/admin/aplicacoes", icon: Layers },
   ];
 
@@ -100,7 +104,7 @@ export function SidebarMain() {
                           ? "justify-center h-8 p-0 gap-0" 
                           : "gap-3 px-3 py-2 h-10",
                         isActive
-                          ? "text-trampo-primary-600 bg-[#F2FCFA] border-trampo-primary-100/50 hover:bg-[#F2FCFA] hover:text-trampo-primary-600"
+                          ? "text-trampo-primary-600 bg-trampo-primary-50 border-trampo-primary-100/50 hover:bg-trampo-primary-50 hover:text-trampo-primary-600"
                           : "text-trampo-muted hover:text-trampo-dark hover:bg-neutral-50"
                       )}
                     >
@@ -120,6 +124,7 @@ export function SidebarMain() {
         </SidebarGroup>
 
         {/* Admin Section */}
+        {session?.user?.role?.toLocaleLowerCase() === "admin" && (
         <SidebarGroup className="p-0">
           <SidebarGroupLabel className="px-3 text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 mb-2 h-auto">
             Administrador
@@ -142,7 +147,7 @@ export function SidebarMain() {
                           ? "justify-center h-8 p-0 gap-0" 
                           : "gap-3 px-3 py-2 h-10",
                         isActive
-                          ? "text-trampo-primary-600 bg-[#F2FCFA] border-trampo-primary-100/50 hover:bg-[#F2FCFA] hover:text-trampo-primary-600"
+                          ? "text-trampo-primary-600 bg-trampo-primary-50 border-trampo-primary-100/50 hover:bg-trampo-primary-50 hover:text-trampo-primary-600"
                           : "text-trampo-muted hover:text-trampo-dark hover:bg-neutral-50"
                       )}
                     >
@@ -160,6 +165,7 @@ export function SidebarMain() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
       </SidebarContent>
 
       {/* Plan Card Footer */}

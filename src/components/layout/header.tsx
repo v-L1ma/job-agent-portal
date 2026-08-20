@@ -37,11 +37,10 @@ export function Header() {
       {/* Right Actions */}
       <div className="flex items-center gap-4">
         {/* Notification Bell */}
-        <button className="relative p-2 rounded-full hover:bg-neutral-50 text-trampo-muted hover:text-trampo-dark transition-colors cursor-pointer border border-transparent hover:border-trampo-border">
+        {/* <button className="relative p-2 rounded-full hover:bg-neutral-50 text-trampo-muted hover:text-trampo-dark transition-colors cursor-pointer border border-transparent hover:border-trampo-border">
           <Bell className="size-4.5" />
-          {/* Notification Badge indicator dot */}
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-trampo-primary-500 ring-2 ring-white" />
-        </button>
+        </button> */}
 
         {/* User Dropdown Menu */}
         <DropdownMenu>
@@ -66,14 +65,12 @@ export function Header() {
               </div>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-trampo-border" />
-            <DropdownMenuItem className="focus:bg-neutral-50 focus:text-trampo-dark cursor-pointer gap-2 py-2 text-xs font-semibold">
-              <User className="size-4 text-trampo-muted" />
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem className="focus:bg-neutral-50 focus:text-trampo-dark cursor-pointer gap-2 py-2 text-xs font-semibold">
-              <Settings className="size-4 text-trampo-muted" />
-              Configurações
-            </DropdownMenuItem>
+            <a href="/perfil">
+              <DropdownMenuItem className="focus:bg-neutral-50 focus:text-trampo-dark cursor-pointer gap-2 py-2 text-xs font-semibold">
+                <User className="size-4 text-trampo-muted" />
+                Perfil
+              </DropdownMenuItem>
+            </a>
             <DropdownMenuSeparator className="bg-trampo-border" />
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: "/login" })}

@@ -244,7 +244,7 @@ function ScraperLogs({ searchQueryId }: { searchQueryId: string }) {
                 {row}
               </AccordionTrigger>
               <AccordionContent>
-                <ExecutionJobs executionId={log.Id} />
+                <ExecutionJobs executionId={log.ExecutionId} />
               </AccordionContent>
             </AccordionItem>
           );

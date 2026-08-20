@@ -2,6 +2,25 @@ import { Job, JobsParams, ListJobsResponse, RateJobPayload } from "@/types/job";
 import { api, toApiError } from "./api";
 import { getFileNameFromContentDisposition } from "@/utils/get-file-name-content";
 
+function normalizeJob(raw: any): Job {
+  return {
+    id: raw.id ?? raw.Id,
+    plataformJobId: raw.plataformJobId ?? raw.PlataformJobId ?? raw.Id,
+    title: raw.title ?? raw.Title,
+    description: raw.description ?? raw.Description,
+    url: raw.url ?? raw.Url,
+    isApplied: raw.isApplied ?? raw.IsApplied,
+    status: raw.status ?? raw.Status,
+    active: raw.active ?? raw.Active,
+    createdBy: raw.createdBy ?? raw.CreatedBy,
+    createdAt: raw.createdAt ?? raw.CreatedAt,
+    lastModifiedBy: raw.lastModifiedBy ?? raw.LastModifiedBy,
+    lastModifiedAt: raw.lastModifiedAt ?? raw.LastModifiedAt,
+    platform: raw.platform ?? raw.Platform,
+    company: raw.company ?? raw.Company,
+  };
+}
+
 export async function getJobs(queryParams: JobsParams): Promise<ListJobsResponse> {
   try {
     const params: Record<string, string> = {};
@@ -14,7 +33,10 @@ export async function getJobs(queryParams: JobsParams): Promise<ListJobsResponse
       queryParams.platform && (params.platform = queryParams.platform);
     }
     const response = await api.get<ListJobsResponse>("/jobs", { params });
-    return response.data;
+    return {
+      jobs: (response.data.jobs ?? []).map(normalizeJob),
+      nextCursor: response.data.nextCursor,
+    };
   } catch (error) {
     throw toApiError(error, "Não foi possível buscar as vagas.");
   }
@@ -23,7 +45,7 @@ export async function getJobs(queryParams: JobsParams): Promise<ListJobsResponse
 export async function getJobById(jobId: string): Promise<Job> {
   try {
     const response = await api.get<Job>(`/jobs/${jobId}`);
-    return response.data;
+    return normalizeJob(response.data);
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar os detalhes da vaga.");
   }

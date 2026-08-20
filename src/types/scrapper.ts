@@ -6,6 +6,7 @@ export interface ScrapperLog {
   Status: string;
   Obs: string | null;
   SavedJobsCount: number;
+  ExecutionId: string;
 }
 
 export interface ScrapperLogsResponse {
