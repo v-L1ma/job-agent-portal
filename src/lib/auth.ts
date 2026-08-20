@@ -14,6 +14,7 @@ function getRoleFromToken(token: string): string | undefined {
 }
 
 export const authOptions: AuthOptions = {
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Credentials",

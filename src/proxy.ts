@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 export async function proxy(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
   // Protect dashboard routes
@@ -17,7 +17,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (pathname.startsWith("/admin")) {
-    if (!token || token.role?.toLocaleLowerCase() !== "admin") {
+    if (!token || token.role?.toLowerCase() !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }

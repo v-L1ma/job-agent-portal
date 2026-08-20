@@ -37,8 +37,7 @@ function getErrorMessage(error: unknown): string {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  const { status } = useSession();
   const isLoading = status === "loading";
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [expiredError, setExpiredError] = useState<string | null>(null);
@@ -63,12 +62,6 @@ export default function LoginPage() {
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace("/dashboard");
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   const onSubmit = async (values: LoginFormData) => {
     setSubmitError(null);

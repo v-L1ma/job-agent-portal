@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -48,8 +48,7 @@ function getErrorMessage(error: unknown): string {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  const { status } = useSession();
   const isLoading = status === "loading";
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -68,12 +67,6 @@ export default function RegisterPage() {
       terms: false,
     },
   });
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace("/dashboard");
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   const onSubmit = async (values: RegisterFormData) => {
     setSubmitError(null);
