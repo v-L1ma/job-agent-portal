@@ -265,61 +265,8 @@ export default function RegisterPage() {
         </div>
       }
       banner={
-        <div className="w-full flex flex-col gap-6">
-          {/* AI Optimization Mockup Card */}
-          <div className="w-full bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-[0_30px_70px_-15px_rgba(46,175,146,0.12)]">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-trampo-primary-100 flex items-center justify-center text-trampo-primary-600">
-                <Sparkles className="size-4.5" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-trampo-dark text-sm">Otimizador de Currículo</h3>
-                <p className="text-[10px] text-trampo-muted font-medium">IA de adaptação automática</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {/* ATS Checker list */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[11px] font-bold text-trampo-dark">Aderência à vaga</span>
-                  <span className="text-xs font-extrabold text-trampo-primary-600">94%</span>
-                </div>
-                <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-trampo-primary-500 rounded-full" style={{ width: "94%" }} />
-                </div>
-              </div>
-
-              <div className="border-t border-neutral-100 pt-3 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-trampo-dark">
-                  <Check className="size-4 text-trampo-primary-500 stroke-[3]" />
-                  <span>Palavras-chave encontradas</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 pl-6">
-                  <span className="text-[9px] font-bold bg-[#F2FCFA] text-trampo-primary-600 border border-trampo-primary-100 px-2 py-0.5 rounded-full">React</span>
-                  <span className="text-[9px] font-bold bg-[#F2FCFA] text-trampo-primary-600 border border-trampo-primary-100 px-2 py-0.5 rounded-full">TypeScript</span>
-                  <span className="text-[9px] font-bold bg-[#F2FCFA] text-trampo-primary-600 border border-trampo-primary-100 px-2 py-0.5 rounded-full">Next.js</span>
-                </div>
-              </div>
-
-              <div className="border-t border-neutral-100 pt-3">
-                <p className="text-[10px] text-trampo-muted leading-relaxed">
-                  O currículo foi reestruturado automaticamente com base nas qualificações mais relevantes do anúncio da vaga.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Stat card */}
-          <div className="bg-white/90 backdrop-blur-md border border-neutral-200/60 p-5 rounded-2xl shadow-xl flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-trampo-muted mb-0.5">Tempo economizado</p>
-              <h4 className="text-xl font-extrabold text-trampo-dark">~12h / semana</h4>
-            </div>
-            <div className="text-xs font-bold text-trampo-primary-600 bg-trampo-primary-100/50 px-3 py-1 rounded-full">
-              Automático
-            </div>
-          </div>
+        <div className="w-full h-full">
+          <div className="w-full h-full bg-[url('/assets/login-banner.png')] bg-cover bg-center bg-no-repeat"></div>
         </div>
       }
     />

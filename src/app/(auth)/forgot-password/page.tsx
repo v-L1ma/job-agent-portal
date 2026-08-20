@@ -141,31 +141,8 @@ export default function ForgotPasswordPage() {
         </div>
       }
       banner={
-        <div className="w-full flex flex-col gap-6">
-          {/* Security Mockup Card */}
-          <div className="w-full bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-[0_30px_70px_-15px_rgba(46,175,146,0.12)]">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-trampo-primary-100 flex items-center justify-center text-trampo-primary-600">
-                <ShieldCheck className="size-4.5" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-trampo-dark text-sm">Acesso Seguro</h3>
-                <p className="text-[10px] text-trampo-muted font-medium">Proteção e Criptografia</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-[#F2FCFA] rounded-xl border border-trampo-primary-100">
-                <Key className="text-trampo-primary-600 size-5 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="font-bold text-xs text-trampo-dark mb-0.5">Segurança Avançada</h4>
-                  <p className="text-[10px] text-trampo-muted leading-normal">
-                    Seus dados estão protegidos por criptografia ponta a ponta e atendem à LGPD.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="w-full h-full">
+          <div className="w-full h-full bg-[url('/assets/login-banner.png')] bg-cover bg-center bg-no-repeat"></div>
         </div>
       }
     />
