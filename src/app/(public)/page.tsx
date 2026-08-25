@@ -1,73 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { absoluteUrl } from "@/lib/seo";
-import { Sparkles, Clock, Brain, FileText, Check, X, Star } from "lucide-react";
-
-const organizationStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Trampo",
-  url: absoluteUrl("/"),
-  logo: absoluteUrl("/assets/logo-dark.png"),
-};
-
-const webSiteStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Trampo",
-  url: absoluteUrl("/"),
-  inLanguage: "pt-BR",
-};
-
+import { Clock, Brain, FileText, Check, X, Star } from "lucide-react";
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white font-sans text-trampo-dark antialiased">
-      
-      {/* Sticky Header */}
-      <header className="fixed top-0 z-50 w-full border-b border-trampo-border/50 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/assets/logo-dark.png"
-                alt="Trampo Logo"
-                width={120}
-                height={40}
-                className="h-8 w-auto object-contain"
-                priority
-              />
-            </Link>
-          </div>
-          <nav className="hidden gap-8 text-sm font-medium tracking-tight md:flex">
-            <a className="text-trampo-muted transition-colors hover:text-trampo-dark" href="#funcionalidades">
-              Funcionalidades
-            </a>
-            <a className="text-trampo-muted transition-colors hover:text-trampo-dark" href="#sobre">
-              Sobre
-            </a>
-            <a className="text-trampo-muted transition-colors hover:text-trampo-dark" href="#depoimentos">
-              Depoimentos
-            </a>
-            <a className="text-trampo-muted transition-colors hover:text-trampo-dark" href="#precos">
-              Preços
-            </a>
-          </nav>
-          <div className="flex items-center gap-5">
-            <Link className="text-sm font-medium tracking-tight text-trampo-muted transition-colors hover:text-trampo-dark" href="/login">
-              Entrar
-            </Link>
-            <Link
-              className="rounded-full bg-trampo-primary-500 px-5 py-2.5 text-sm font-semibold tracking-tight text-white shadow-lg shadow-trampo-primary-500/10 hover:bg-trampo-primary-400 active:bg-trampo-primary-600 transition-all duration-150 active:scale-95"
-              href="/register"
-            >
-              Começar Agora
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-20">
-        {/* Hero Section */}
+    <>
+    {/* Hero Section */}
         <section className="relative overflow-hidden px-6 pb-24 pt-20 md:pb-32 md:pt-28">
           {/* Soft background glows from Trampo Design System */}
           <div className="absolute top-0 inset-x-0 h-[600px] bg-[radial-gradient(ellipse_at_top,_var(--color-trampo-primary-100),_transparent_60%)] opacity-60 pointer-events-none -z-10" />
@@ -596,45 +533,6 @@ export default function LandingPage() {
             </Link>
           </div>
         </section>
-      </main>
-
-      {/* Dark Footer */}
-      <footer className="bg-trampo-dark text-white border-t border-neutral-900 py-16 px-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 md:flex-row">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/assets/logo-light.png"
-                alt="Trampo Logo"
-                width={120}
-                height={40}
-                className="h-8 w-auto object-contain"
-              />
-            </Link>
-          </div>
-          <div className="flex flex-wrap justify-center gap-8 text-[11px] font-bold uppercase tracking-[0.1em]">
-            <a className="text-neutral-400 transition-colors hover:text-white" href="#funcionalidades">Funcionalidades</a>
-            <a className="text-neutral-400 transition-colors hover:text-white" href="#sobre">Sobre</a>
-            <a className="text-neutral-400 transition-colors hover:text-white" href="#depoimentos">Depoimentos</a>
-            <a className="text-neutral-400 transition-colors hover:text-white" href="#precos">Preços</a>
-            <Link className="text-neutral-400 transition-colors hover:text-white" href="/login">Entrar</Link>
-            <Link className="text-neutral-400 transition-colors hover:text-white" href="/register">Cadastro</Link>
-          </div>
-          <div className="text-[11px] font-medium tracking-wider text-neutral-500">
-            © 2024 Trampo. Todos os direitos reservados.
-          </div>
-        </div>
-      </footer>
-
-      {/* Structured Schema Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteStructuredData) }}
-      />
-    </div>
+      </>
   );
 }
