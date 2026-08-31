@@ -196,9 +196,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-4">
             <Button
-              className="h-11 gap-3 border border-trampo-border bg-white text-trampo-dark hover:bg-neutral-50 font-semibold rounded-full transition-colors cursor-pointer"
+              className="w-full h-11 gap-3 border border-trampo-border bg-white text-trampo-dark hover:bg-neutral-50 font-semibold rounded-full transition-colors cursor-pointer"
               type="button"
               variant="outline"
               onClick={()=>signIn("google")}
