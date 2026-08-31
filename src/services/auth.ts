@@ -44,6 +44,15 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   }
 }
 
+export async function loginWithGoogle(payload: { idToken: string }): Promise<LoginResponse> {
+  try {
+    const response = await api.post<LoginResponse>("/login/google", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível realizar o login.");
+  }
+}
+
 export async function register(payload: RegisterPayload): Promise<void> {
   try {
     await api.post("/register", payload);

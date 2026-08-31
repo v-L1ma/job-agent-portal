@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Job, JobsParams, ListJobsResponse, RateJobPayload } from "@/types/job";
 import { api, toApiError } from "./api";
 import { getFileNameFromContentDisposition } from "@/utils/get-file-name-content";
@@ -70,6 +71,20 @@ export async function generateCvForJob(jobId: string): Promise<{ blob: Blob; fil
 
     return { blob, fileName };
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const json = JSON.parse(text);
+        const msg = json.message || json.error;
+        if (msg) {
+          throw new Error(msg);
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message !== "request failed with status code 404") {
+          throw e;
+        }
+      }
+    }
     throw toApiError(error, "Não foi possível gerar o currículo para esta vaga.");
   }
 }

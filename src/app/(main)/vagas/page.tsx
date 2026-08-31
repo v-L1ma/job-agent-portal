@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { LoaderCircle, Briefcase, XCircle } from "lucide-react";
 import {
@@ -43,19 +43,14 @@ export default function VagasPage() {
   // Drawer / Side Panel details state
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   // CV Generation modal states
-  const [cvGenerationState, setCvGenerationState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [generatingForJobId, setGeneratingForJobId] = useState<string | null>(null);
-  const [generationErrorMsg, setGenerationErrorMsg] = useState<string | null>(null);
   const [generatedCv, setGeneratedCv] = useState<{ blob: Blob; fileName: string } | null>(null);
+  const [cvErrorMsg, setCvErrorMsg] = useState<string | null>(null);
 
   // Negative feedback rating modal states
   const [feedbackJobId, setFeedbackJobId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   // TanStack Infinite Query hook
   const {
@@ -81,6 +76,54 @@ export default function VagasPage() {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: sessionStatus === "authenticated",
+  });
+
+  // Mutation: Load job details
+  const detailsMutation = useMutation({
+    mutationFn: (jobId: string) => getJobById(jobId),
+    onSuccess: (data, jobId) => {
+      setSelectedJob(data);
+      setSelectedJobId(jobId);
+    },
+    onError: (err: Error) => {
+      console.error("Erro ao carregar detalhes:", err);
+    },
+  });
+
+  // Mutation: Generate personalized CV
+  const cvMutation = useMutation({
+    mutationFn: (jobId: string) => generateCvForJob(jobId),
+    onSuccess: (result) => {
+      setGeneratedCv(result);
+    },
+    onError: (err: any) => {
+      setCvErrorMsg(err.error || "Houve uma falha ao gerar o currículo personalizado. Certifique-se de que você fez upload do seu currículo e tente novamente.");
+      console.error(err);
+    },
+  });
+
+  // Mutation: Rate job (thumbs down with feedback)
+  const rateMutation = useMutation({
+    mutationFn: ({ jobId, feedback }: { jobId: string; feedback?: string }) =>
+      rateJob(jobId, { liked: false, feedback }),
+    onSuccess: (_data, { jobId }) => {
+      setHiddenJobIds((prev) => {
+        const next = new Set(prev);
+        next.add(jobId);
+        return next;
+      });
+
+      if (selectedJobId === jobId) {
+        setSelectedJobId(null);
+        setSelectedJob(null);
+      }
+
+      setFeedbackJobId(null);
+      setFeedbackText("");
+    },
+    onError: (err) => {
+      console.error("Erro ao enviar avaliação negativa:", err);
+    },
   });
 
   const allJobs = useMemo(() => data?.pages.flatMap((p) => p.jobs) ?? [], [data]);
@@ -136,43 +179,25 @@ export default function VagasPage() {
   };
 
   // Load and display details drawer
-  const openDetails = async (jobId: string) => {
-    try {
-      setSelectedJobId(jobId);
-      setLoadingDetails(true);
-      setDetailsError(null);
-      const data = await getJobById(jobId);
-      setSelectedJob(data);
-    } catch (err: any) {
-      setDetailsError(err.message || "Erro ao carregar detalhes.");
-    } finally {
-      setLoadingDetails(false);
-    }
+  const openDetails = (jobId: string) => {
+    setSelectedJobId(jobId);
+    setSelectedJob(null);
+    detailsMutation.reset();
+    detailsMutation.mutate(jobId);
   };
 
   const closeDetails = () => {
     setSelectedJobId(null);
     setSelectedJob(null);
-    setDetailsError(null);
+    detailsMutation.reset();
   };
 
   // CV personalized generation callback
-  const handleGenerateCv = async (jobId: string) => {
-    try {
-      setGeneratedCv(null);
-      setGenerationErrorMsg(null);
-      setGeneratingForJobId(jobId);
-      setCvGenerationState('loading');
-
-      const result = await generateCvForJob(jobId);
-      setGeneratedCv(result);
-      setCvGenerationState('success');
-    } catch (err: any) {
-      setCvGenerationState('error');
-      setGenerationErrorMsg(err.message || "Houve uma falha ao gerar o currículo personalizado.");
-    } finally {
-      setGeneratingForJobId(null);
-    }
+  const handleGenerateCv = (jobId: string) => {
+    setGeneratedCv(null);
+    setCvErrorMsg(null);
+    cvMutation.reset();
+    cvMutation.mutate(jobId);
   };
 
   const handleDownloadCv = () => {
@@ -188,33 +213,12 @@ export default function VagasPage() {
   };
 
   // Send rateJob mutation for ThumbsDown
-  const handleNotInterested = async () => {
+  const handleNotInterested = () => {
     if (!feedbackJobId || !session?.user) return;
-
-    try {
-      setIsSubmittingFeedback(true);
-      await rateJob(feedbackJobId, {
-        liked: false,
-        feedback: feedbackText.trim() || undefined,
-      });
-
-      setHiddenJobIds((prev) => {
-        const next = new Set(prev);
-        next.add(feedbackJobId);
-        return next;
-      });
-
-      if (selectedJobId === feedbackJobId) {
-        closeDetails();
-      }
-
-      setFeedbackJobId(null);
-      setFeedbackText("");
-    } catch (err) {
-      console.error("Erro ao enviar avaliação negativa:", err);
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
+    rateMutation.mutate({
+      jobId: feedbackJobId,
+      feedback: feedbackText.trim() || undefined,
+    });
   };
 
   const showSkeleton = sessionStatus === "loading" || (isLoading && allJobs.length === 0);
@@ -331,7 +335,7 @@ export default function VagasPage() {
                     setFeedbackJobId(jobId);
                     setFeedbackText("");
                   }}
-                  isGenerating={generatingForJobId === job.id}
+                  isGenerating={cvMutation.isPending && cvMutation.variables === job.id}
                 />
               ))}
             </div>
@@ -353,11 +357,11 @@ export default function VagasPage() {
       <JobDetailsDrawer
         selectedJobId={selectedJobId}
         selectedJob={selectedJob}
-        loadingDetails={loadingDetails}
-        detailsError={detailsError}
+        loadingDetails={detailsMutation.isPending}
+        detailsError={detailsMutation.error?.message || null}
         onClose={closeDetails}
         onGenerateCv={handleGenerateCv}
-        isGenerating={generatingForJobId === selectedJobId}
+        isGenerating={cvMutation.isPending && cvMutation.variables === selectedJobId}
         onRetryLoad={openDetails}
       />
 
@@ -368,15 +372,15 @@ export default function VagasPage() {
         setFeedbackText={setFeedbackText}
         onClose={() => setFeedbackJobId(null)}
         onConfirm={handleNotInterested}
-        isSubmitting={isSubmittingFeedback}
+        isSubmitting={rateMutation.isPending}
       />
 
       {/* CV Generation Loading/Success/Error Modal Overlay */}
       <CvGenerationModal
-        state={cvGenerationState}
+        state={cvMutation.isPending ? 'loading' : cvMutation.isSuccess ? 'success' : cvMutation.isError ? 'error' : 'idle'}
         generatedCv={generatedCv}
-        errorMsg={generationErrorMsg}
-        onClose={() => setCvGenerationState('idle')}
+        errorMsg={cvErrorMsg}
+        onClose={() => { cvMutation.reset(); setGeneratedCv(null); setCvErrorMsg(null); }}
         onDownload={handleDownloadCv}
       />
     </div>

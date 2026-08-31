@@ -28,11 +28,13 @@ export interface UploadCvResponse {
 }
 
 export interface GeneratedCvItem {
+  Id: string
   UserId: string;
   JobId: string;
   Title: string;
   FileName: string;
   ExtractedText: string;
+  CreatedAt: string;
 }
 
 export interface GeneratedCvListResponse {

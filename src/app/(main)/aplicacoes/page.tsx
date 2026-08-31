@@ -80,7 +80,7 @@ export default function AplicacoesPage() {
     },
   });
 
-  const aplicacoes = data?.data.map(mapApplication) ?? [];
+  const aplicacoes = data?.data?.map(mapApplication) ?? [];
   const showSkeleton = sessionStatus === "loading" || (isLoading && aplicacoes.length === 0);
 
   function handleEdit(aplicacaoId: string, index: number, respostaId: string, respostaAtual: string) {
@@ -148,7 +148,7 @@ export default function AplicacoesPage() {
         </div>
       )}
 
-      {!showSkeleton && !isError && aplicacoes.length === 0 && (
+      {!showSkeleton && !isError && (aplicacoes?.length ?? 0) === 0 && (
         <div className="rounded-2xl border border-trampo-border bg-white p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
           <FileText className="w-12 h-12 text-neutral-300" />
           <div className="space-y-1">
@@ -160,7 +160,7 @@ export default function AplicacoesPage() {
         </div>
       )}
 
-      {!showSkeleton && !isError && aplicacoes.length > 0 && (
+      {!showSkeleton && !isError && (aplicacoes?.length ?? 0) > 0 && (
         <div className="w-full rounded-2xl border border-trampo-border bg-white overflow-hidden">
           <div className="grid grid-cols-[1.5fr_1fr_1fr_0.7fr_0.9fr_0.8fr] gap-2 items-center px-5 py-3 border-b border-trampo-border bg-neutral-50">
             {headers.map((header) => (
