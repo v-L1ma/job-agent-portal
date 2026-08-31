@@ -18,11 +18,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Upload,
   LoaderCircle,
   FileText,
   Download,
-  Clock,
   X,
   FileUp,
   Sparkles,
@@ -233,7 +240,7 @@ export function CurriculoForm({
 
   const handleDownloadGeneratedCv = async (item: GeneratedCvItem) => {
     try {
-      const { blob, fileName } = await downloadGeneratedCv(item.JobId);
+      const { blob, fileName } = await downloadGeneratedCv(item.Id);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -309,10 +316,8 @@ export function CurriculoForm({
       {/* Currículo Atual Card - Custom SaaS look matching DESIGN.md */}
       {!isModal && hasUploadedCv && (
         <div className="relative overflow-hidden bg-white border border-trampo-border shadow-[0_12px_40px_rgba(0,0,0,0.015)] rounded-2xl p-6">
-          <div className="absolute top-0 left-0 w-1 h-full bg-trampo-primary-500" />
           
           <div className="flex items-center gap-2 mb-6 text-trampo-dark">
-            <File className="w-5 h-5 text-trampo-primary-500" />
             <h2 className="text-sm md:text-base font-bold">Currículo Atual</h2>
           </div>
 
@@ -418,10 +423,8 @@ export function CurriculoForm({
       <Accordion defaultValue={["upload"]} className="space-y-4">
         <AccordionItem value="upload" className="border border-trampo-border bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.015)] overflow-hidden">
           <div className="relative">
-            <div className="absolute top-0 left-0 w-1 h-full bg-trampo-primary-500" />
             <AccordionTrigger className="flex items-center justify-between gap-2 p-6 hover:no-underline font-bold text-trampo-dark">
               <div className="flex items-center gap-2 w-full">
-                <Upload className="w-5 h-5 text-trampo-primary-500" />
                 <span className="text-sm md:text-base font-bold">Upload de Currículo</span>
               </div>
             </AccordionTrigger>
@@ -560,18 +563,10 @@ export function CurriculoForm({
         {!isModal && (
           <AccordionItem value="generated" className="border border-trampo-border bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.015)] overflow-hidden">
             <div className="relative">
-              <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
               <AccordionTrigger className="flex items-center justify-between gap-2 p-6 hover:no-underline font-bold text-trampo-dark">
                 <div className="w-full flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-500" />
-                  <span className="text-sm md:text-base font-bold">Currículos Gerados por IA</span>
+                  <span className="text-sm md:text-base font-bold">Currículos Gerados por IA <span className="text-sm text-trampo-primary-500">({generatedCvs?.length ?? 0} gerados)</span></span>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className="bg-purple-100 hover:bg-purple-100 text-purple-700 text-xs font-extrabold px-2.5 py-0.5 rounded-lg border-none"
-                >
-                  {generatedCvs?.length ?? 0} gerados
-                </Badge>
               </AccordionTrigger>
 
               <AccordionContent className="p-6 pt-0 border-t border-neutral-50">
@@ -581,7 +576,7 @@ export function CurriculoForm({
                       <LoaderCircle className="w-8 h-8 animate-spin text-purple-500" />
                       <p className="text-xs text-trampo-muted font-semibold">Carregando currículos gerados...</p>
                     </div>
-                  ) : generatedCvs?.length === 0 ? (
+                  ) : (generatedCvs?.length ?? 0) === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 space-y-3">
                       <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-400">
                         <Sparkles className="w-6 h-6" />
@@ -594,40 +589,50 @@ export function CurriculoForm({
                       </div>
                     </div>
                   ) : (
-                    <div className="divide-y divide-neutral-100">
-                      {generatedCvs?.map((item) => (
-                        <div
-                          key={item.JobId}
-                          className="group py-4 flex items-center justify-between gap-4 hover:bg-neutral-50/50 rounded-xl px-2 transition-all"
-                        >
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-                              <FileText className="w-5 h-5 text-purple-500" />
-                            </div>
-                            <div className="space-y-1 flex-1 min-w-0">
-                              <h4 className="text-xs font-bold text-trampo-dark truncate leading-tight">
-                                {item.Title}
-                              </h4>
-                              <p className="text-[10px] text-trampo-muted font-semibold flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5 text-neutral-300 shrink-0" />
-                                <span className="truncate">{item.FileName}</span>
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-neutral-400 hover:text-trampo-primary-500 hover:bg-[#F2FCFA] rounded-lg transition-all cursor-pointer"
-                              onClick={() => handleDownloadGeneratedCv(item)}
-                              title="Baixar PDF"
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Título</TableHead>
+                          <TableHead>Arquivo</TableHead>
+                          <TableHead>Criado em</TableHead>
+                          <TableHead className="w-12"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {generatedCvs?.map((item) => (
+                          <TableRow key={item.JobId}>
+                            <TableCell className="font-bold text-trampo-dark">
+                              {item.Title}
+                            </TableCell>
+                            <TableCell className="text-trampo-muted text-xs">
+                              {item.FileName}
+                            </TableCell>
+                            <TableCell className="text-trampo-muted text-xs">
+                              {item.CreatedAt
+                                ? new Date(item.CreatedAt).toLocaleDateString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-neutral-400 hover:text-trampo-primary-500 hover:bg-[#F2FCFA] rounded-lg transition-all cursor-pointer"
+                                onClick={() => handleDownloadGeneratedCv(item)}
+                                title="Baixar PDF"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   )}
                 </div>
               </AccordionContent>

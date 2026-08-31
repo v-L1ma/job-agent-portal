@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { SidebarMain } from "@/components/layout/sidebar";
+import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -30,7 +31,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
           {/* Children content wrapper */}
           <div className="relative z-10 p-6 md:p-8 max-w-7xl mx-auto w-full">
-            {children}
+            <OnboardingGate>{children}</OnboardingGate>
           </div>
         </div>
       </div>
