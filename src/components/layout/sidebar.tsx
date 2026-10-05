@@ -3,10 +3,12 @@
 import { cn } from "@/lib/utils";
 import {
   Briefcase,
+  CreditCard,
   Cpu,
   FileText,
   Layers,
   LayoutDashboard,
+  RefreshCw,
   Settings,
   Shield,
   Star
@@ -48,6 +50,8 @@ export function SidebarMain() {
   const adminItems = [
     { name: "Scrapers", href: "/admin/scrapers", icon: Cpu },
     { name: "Cargos", href: "/admin/roles", icon: Shield },
+    { name: "Planos", href: "/admin/plans", icon: CreditCard },
+    { name: "Assinaturas", href: "/admin/subscriptions", icon: RefreshCw },
     { name: "Aplicações", href: "/admin/aplicacoes", icon: Layers },
   ];
 

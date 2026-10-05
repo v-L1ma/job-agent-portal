@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Brain, FileText, Check, X, Star } from "lucide-react";
+import { Clock, Brain, FileText, Check, Star } from "lucide-react";
+import { PricingSection } from "@/components/landing/pricing-section";
 export default function LandingPage() {
   return (
     <>
@@ -417,58 +418,7 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-3">
-              {/* Free Plan */}
-              <div className="rounded-2xl border border-trampo-border bg-white p-8 hover:border-trampo-primary-400 transition-colors flex flex-col justify-between h-full">
-                <div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-widest text-trampo-muted">Free</div>
-                  <div className="mb-6 text-4xl font-extrabold text-trampo-dark">R$0<span className="text-sm font-medium text-trampo-muted">/mês</span></div>
-                  <ul className="mb-8 space-y-4 text-sm text-trampo-muted">
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> 5 candidaturas/semana</li>
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Integração LinkedIn Básica</li>
-                    <li className="flex items-center gap-2.5 text-neutral-300"><X className="size-4.5 text-neutral-400" /> IA de Adaptar Currículo</li>
-                  </ul>
-                </div>
-                <Link href="/register" className="w-full rounded-full border border-trampo-border py-3 text-center text-sm font-bold text-trampo-muted hover:text-trampo-dark hover:border-trampo-dark transition-colors block">
-                  Selecionar
-                </Link>
-              </div>
-
-              {/* Pro Plan */}
-              <div className="relative rounded-2xl border-2 border-trampo-primary-500 bg-white p-8 flex flex-col justify-between h-full shadow-xl shadow-trampo-primary-500/5">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-trampo-primary-500 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-                  Mais Popular
-                </div>
-                <div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-widest text-trampo-primary-600">Pro</div>
-                  <div className="mb-6 text-4xl font-extrabold text-trampo-dark">R$49<span className="text-sm font-medium text-trampo-muted">/mês</span></div>
-                  <ul className="mb-8 space-y-4 text-sm text-trampo-dark">
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Candidaturas Ilimitadas</li>
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> IA de Adaptação de Currículo</li>
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Multi-Plataforma (Gupy, Workday)</li>
-                  </ul>
-                </div>
-                <Link href="/register" className="w-full rounded-full bg-trampo-primary-500 py-3 text-center text-sm font-bold text-white shadow-lg shadow-trampo-primary-500/20 hover:bg-trampo-primary-400 transition-colors block">
-                  Começar Agora
-                </Link>
-              </div>
-
-              {/* Enterprise Plan */}
-              <div className="rounded-2xl border border-trampo-border bg-white p-8 hover:border-trampo-primary-400 transition-colors flex flex-col justify-between h-full">
-                <div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-widest text-trampo-muted">Enterprise</div>
-                  <div className="mb-6 text-4xl font-extrabold text-trampo-dark">Contate-nos</div>
-                  <ul className="mb-8 space-y-4 text-sm text-trampo-muted">
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Mentoria Individual</li>
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Suporte Prioritário 24/7</li>
-                    <li className="flex items-center gap-2.5"><Check className="size-4.5 text-trampo-primary-500" /> Customização de IA</li>
-                  </ul>
-                </div>
-                <button className="w-full rounded-full border border-trampo-border py-3 text-sm font-bold text-trampo-muted hover:text-trampo-dark hover:border-trampo-dark transition-colors">
-                  Falar com Consultor
-                </button>
-              </div>
-            </div>
+            <PricingSection />
           </div>
         </section>
 
