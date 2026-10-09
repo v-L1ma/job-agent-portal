@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { RefreshCw, XCircle } from "lucide-react";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getSubscriptions } from "@/services/subscription";
 import { Subscription } from "@/types/subscription";
 
-function formatDate(iso: string): string {
+function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   return d.toLocaleDateString("pt-BR", {
@@ -18,10 +19,6 @@ function formatDate(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function shortId(id: string): string {
-  return id.length > 8 ? `${id.slice(0, 8)}…` : id;
 }
 
 const statusStyles: Record<string, string> = {
@@ -43,6 +40,7 @@ const statusLabels: Record<string, string> = {
 const headers = ["Usuário", "Cargo", "Plano", "Status", "Período", "Cancelamento", "Criado em"];
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
   const { status: sessionStatus } = useSession();
 
   const {
@@ -142,14 +140,23 @@ export default function SubscriptionsPage() {
             return (
               <div
                 key={sub.id}
-                className="grid grid-cols-[1fr_1fr_1fr_0.8fr_1.5fr_1fr_1.2fr] gap-2 items-center px-5 py-3.5 border-b border-trampo-border last:border-b-0 hover:bg-neutral-50/50 transition-colors"
+                role="link"
+                tabIndex={0}
+                className="grid grid-cols-[1fr_1fr_1fr_0.8fr_1.5fr_1fr_1.2fr] gap-2 items-center px-5 py-3.5 border-b border-trampo-border last:border-b-0 hover:bg-neutral-50/50 transition-colors cursor-pointer"
+                onClick={() => router.push(`/admin/subscriptions/${sub.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/admin/subscriptions/${sub.id}`);
+                  }
+                }}
               >
-                <span className="text-sm text-trampo-muted truncate font-mono" title={sub.userId}>
-                  {shortId(sub.userId)}
+                <span className="text-sm text-trampo-muted truncate" title={sub.userEmail}>
+                  {sub.userEmail || "—"}
                 </span>
 
-                <span className="text-sm text-trampo-muted truncate font-mono" title={sub.roleId}>
-                  {shortId(sub.roleId)}
+                <span className="text-sm text-trampo-muted truncate" title={sub.roleName}>
+                  {sub.roleName || "—"}
                 </span>
 
                 <span className="font-bold text-sm text-trampo-dark truncate" title={sub.plan}>

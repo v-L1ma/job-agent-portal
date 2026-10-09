@@ -1,4 +1,13 @@
-import { Subscription, SubscriptionsResponse } from "@/types/subscription";
+import {
+  MySubscription,
+  MySubscriptionResponse,
+  Subscription,
+  SubscriptionsResponse,
+  SubscriptionDetail,
+  SubscriptionDetailResponse,
+  UserSubscriptions,
+  UserSubscriptionsResponse,
+} from "@/types/subscription";
 import { api, toApiError } from "./api";
 
 export async function getSubscriptions(): Promise<Subscription[]> {
@@ -7,5 +16,32 @@ export async function getSubscriptions(): Promise<Subscription[]> {
     return response.data.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível listar as assinaturas.");
+  }
+}
+
+export async function getSubscriptionById(id: string): Promise<SubscriptionDetail> {
+  try {
+    const response = await api.get<SubscriptionDetailResponse>(`/admin/subscriptions/${id}`);
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar os detalhes da assinatura.");
+  }
+}
+
+export async function getUserSubscriptions(userId: string): Promise<UserSubscriptions> {
+  try {
+    const response = await api.get<UserSubscriptionsResponse>(`/admin/users/${userId}/subscriptions`);
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar as assinaturas do usuário.");
+  }
+}
+
+export async function getMySubscription(): Promise<MySubscription | null> {
+  try {
+    const response = await api.get<MySubscriptionResponse>("/subscriptions/me");
+    return response.data.data ?? null;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar sua assinatura.");
   }
 }

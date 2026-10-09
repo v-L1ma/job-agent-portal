@@ -13,6 +13,7 @@ import { Card } from "../ui/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { changePassword, getUserProfile, updateUserProfile } from "@/services/profile";
 import { PerfilFormSkeleton } from "./perfil-form-skeleton";
+import { PlanSection } from "./plan-section";
 import { showError, showSuccess } from "@/lib/toast";
 
 const profileSchema = z.object({
@@ -306,6 +307,8 @@ export default function ProfilePage() {
                   </div>
                 )}
               </section>
+
+              <PlanSection />
 
               <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-200 dark:border-slate-800">
                 <Button 

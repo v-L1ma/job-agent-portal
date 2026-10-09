@@ -2,9 +2,8 @@
 
 import React, {useMemo} from 'react';
 import {CheckoutForm, CheckoutFormProvider, useCheckoutForm} from '@stripe/react-stripe-js/checkout';
-import {loadStripe} from '@stripe/stripe-js';
-
-const stripePromise = loadStripe('pk_test_51UDlO35pUdtAez2EcC7OQ7ZziMNiIlLCyQwJhRXvhXFbUMVc3ypUl5tHqTTBKh3QdBf0W1swm4yCgh3mKCJ54cbT00PJ2uU8in');
+import type {StripeCheckoutFormConfirmEvent} from '@stripe/stripe-js';
+import {stripePromise} from '@/lib/stripe';
 
 const CheckoutFormTeste = () => {
   const checkoutState = useCheckoutForm();
@@ -13,7 +12,7 @@ const CheckoutFormTeste = () => {
     return <div>Error: {checkoutState.error.message}</div>;
   }
 
-  const onConfirm = async (event:any) => {
+  const onConfirm = async (event: StripeCheckoutFormConfirmEvent) => {
     if (checkoutState.type === 'success') {
       try {
         await checkoutState.checkout.confirm({formConfirmEvent: event});
