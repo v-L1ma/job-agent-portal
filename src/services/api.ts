@@ -20,7 +20,7 @@ export const api = axios.create({
 api.interceptors.request.use(async (config) => {
   if (typeof window !== "undefined") {
     const session = await getSession();
-    const token = (session as any)?.user?.accessToken;
+    const token = session?.user?.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

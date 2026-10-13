@@ -26,14 +26,12 @@ export default function VagasPage() {
   // Filters Input State
   const [filterStack, setFilterStack] = useState("");
   const [filterCompany, setFilterCompany] = useState("");
-  const [filterLocation, setFilterLocation] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("");
 
   // Query Parameters (Refetched only on submit or clear)
   const [queryParams, setQueryParams] = useState({
     stack: "",
     company: "",
-    location: "",
     platform: "",
   });
 
@@ -70,7 +68,6 @@ export default function VagasPage() {
         cursor: pageParam,
         stack: queryParams.stack,
         company: queryParams.company,
-        location: queryParams.location,
         platform: queryParams.platform,
       }),
     initialPageParam: undefined as string | undefined,
@@ -96,8 +93,9 @@ export default function VagasPage() {
     onSuccess: (result) => {
       setGeneratedCv(result);
     },
-    onError: (err: any) => {
-      setCvErrorMsg(err.error || "Houve uma falha ao gerar o currículo personalizado. Certifique-se de que você fez upload do seu currículo e tente novamente.");
+    onError: (err) => {
+      const apiMessage = (err as Error & { error?: string }).error;
+      setCvErrorMsg(apiMessage || "Houve uma falha ao gerar o currículo personalizado. Certifique-se de que você fez upload do seu currículo e tente novamente.");
       console.error(err);
     },
   });
@@ -159,7 +157,6 @@ export default function VagasPage() {
     setQueryParams({
       stack: filterStack.trim(),
       company: filterCompany.trim(),
-      location: filterLocation.trim(),
       platform: filterPlatform.trim(),
     });
   };
@@ -168,12 +165,10 @@ export default function VagasPage() {
   const handleClearFilters = () => {
     setFilterStack("");
     setFilterCompany("");
-    setFilterLocation("");
     setFilterPlatform("");
     setQueryParams({
       stack: "",
       company: "",
-      location: "",
       platform: "",
     });
   };
@@ -243,8 +238,6 @@ export default function VagasPage() {
         setFilterStack={setFilterStack}
         filterCompany={filterCompany}
         setFilterCompany={setFilterCompany}
-        filterLocation={filterLocation}
-        setFilterLocation={setFilterLocation}
         filterPlatform={filterPlatform}
         setFilterPlatform={setFilterPlatform}
         onApply={handleApplyFilters}

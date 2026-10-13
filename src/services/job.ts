@@ -3,22 +3,56 @@ import { Job, JobsParams, ListJobsResponse, RateJobPayload } from "@/types/job";
 import { api, toApiError } from "./api";
 import { getFileNameFromContentDisposition } from "@/utils/get-file-name-content";
 
-function normalizeJob(raw: any): Job {
+/**
+ * Payload bruto da API: o backend pode devolver em camelCase ou PascalCase.
+ */
+interface RawJob {
+  id?: string;
+  Id?: string;
+  plataformJobId?: string;
+  PlataformJobId?: string;
+  title?: string;
+  Title?: string;
+  description?: string;
+  Description?: string;
+  url?: string;
+  Url?: string;
+  isApplied?: boolean;
+  IsApplied?: boolean;
+  status?: string;
+  Status?: string;
+  active?: boolean;
+  Active?: boolean;
+  createdBy?: string;
+  CreatedBy?: string;
+  createdAt?: string;
+  CreatedAt?: string;
+  lastModifiedBy?: string;
+  LastModifiedBy?: string;
+  lastModifiedAt?: string;
+  LastModifiedAt?: string;
+  platform?: string;
+  Platform?: string;
+  company?: string;
+  Company?: string;
+}
+
+function normalizeJob(raw: RawJob): Job {
   return {
-    id: raw.id ?? raw.Id,
-    plataformJobId: raw.plataformJobId ?? raw.PlataformJobId ?? raw.Id,
-    title: raw.title ?? raw.Title,
-    description: raw.description ?? raw.Description,
-    url: raw.url ?? raw.Url,
-    isApplied: raw.isApplied ?? raw.IsApplied,
-    status: raw.status ?? raw.Status,
-    active: raw.active ?? raw.Active,
-    createdBy: raw.createdBy ?? raw.CreatedBy,
-    createdAt: raw.createdAt ?? raw.CreatedAt,
-    lastModifiedBy: raw.lastModifiedBy ?? raw.LastModifiedBy,
-    lastModifiedAt: raw.lastModifiedAt ?? raw.LastModifiedAt,
-    platform: raw.platform ?? raw.Platform,
-    company: raw.company ?? raw.Company,
+    id: raw.id ?? raw.Id ?? "",
+    plataformJobId: raw.plataformJobId ?? raw.PlataformJobId ?? raw.Id ?? "",
+    title: raw.title ?? raw.Title ?? "",
+    description: raw.description ?? raw.Description ?? "",
+    url: raw.url ?? raw.Url ?? "",
+    isApplied: raw.isApplied ?? raw.IsApplied ?? false,
+    status: raw.status ?? raw.Status ?? "",
+    active: raw.active ?? raw.Active ?? false,
+    createdBy: raw.createdBy ?? raw.CreatedBy ?? "",
+    createdAt: raw.createdAt ?? raw.CreatedAt ?? "",
+    lastModifiedBy: raw.lastModifiedBy ?? raw.LastModifiedBy ?? "",
+    lastModifiedAt: raw.lastModifiedAt ?? raw.LastModifiedAt ?? "",
+    platform: raw.platform ?? raw.Platform ?? "",
+    company: raw.company ?? raw.Company ?? "",
   };
 }
 
@@ -27,11 +61,10 @@ export async function getJobs(queryParams: JobsParams): Promise<ListJobsResponse
     const params: Record<string, string> = {};
     if (queryParams) {
       params.limit = String(queryParams.limit ?? 10);
-      queryParams.cursor && (params.cursor = queryParams.cursor);
-      queryParams.stack && (params.stack = queryParams.stack);
-      queryParams.location && (params.location = queryParams.location);
-      queryParams.company && (params.company = queryParams.company);
-      queryParams.platform && (params.platform = queryParams.platform);
+      if (queryParams.cursor) params.cursor = queryParams.cursor;
+      if (queryParams.stack) params.stack = queryParams.stack;
+      if (queryParams.company) params.company = queryParams.company;
+      if (queryParams.platform) params.platform = queryParams.platform;
     }
     const response = await api.get<ListJobsResponse>("/jobs", { params });
     return {
