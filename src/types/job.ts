@@ -28,7 +28,6 @@ export interface RateJobPayload {
 
 export interface JobsParams {
   stack?: string;
-  location?: string;
   company?: string;
   platform?: string;
   limit?: number;

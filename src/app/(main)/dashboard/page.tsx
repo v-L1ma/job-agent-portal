@@ -179,8 +179,13 @@ export default function DashboardPage() {
     return { ...item, percentage: pct };
   });
 
-  // SVG Donut paths
-  let cumulativePercentage = 0;
+  // SVG Donut segments (offset acumulado calculado de forma imutável)
+  const donutSegments = statusDistributionWithPct
+    .filter((item) => item.percentage > 0)
+    .map((item, index, items) => ({
+      ...item,
+      offset: 100 - items.slice(0, index).reduce((sum, prev) => sum + prev.percentage, 0),
+    }));
 
   // Platform progress bars
   const platforms = statistics.platformDistribution || [];
@@ -304,13 +309,8 @@ export default function DashboardPage() {
               />
               
               {/* Dynamic segments */}
-              {statusDistributionWithPct.map((item, idx) => {
-                const pct = item.percentage;
-                if (pct <= 0) return null;
-                const strokeDasharray = `${pct} 100`;
-                const strokeDashoffset = 100 - cumulativePercentage;
-                cumulativePercentage += pct;
-                const config = getStatusConfig(item.status);
+              {donutSegments.map((segment, idx) => {
+                const config = getStatusConfig(segment.status);
 
                 return (
                   <circle
@@ -321,8 +321,8 @@ export default function DashboardPage() {
                     fill="none"
                     stroke={config.colorHex}
                     strokeWidth="3.5"
-                    strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
+                    strokeDasharray={`${segment.percentage} 100`}
+                    strokeDashoffset={segment.offset}
                   />
                 );
               })}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, ArrowRight, Star, AlertCircle } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um e-mail válido."),
@@ -23,7 +23,6 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function getErrorMessage(error: unknown): string {
-  console.log("Error details:", error);
   if (error instanceof Error && error.message === "Network Error") {
     return "Erro de rede. Por favor, tente novamente em instantes.";
   }
@@ -35,16 +34,28 @@ function getErrorMessage(error: unknown): string {
   return "Não foi possível entrar. Tente novamente.";
 }
 
-export default function LoginPage() {
+function isEmailNotConfirmedError(message: string | null | undefined): boolean {
+  if (!message) return false;
+  const normalized = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return normalized.includes("e-mail nao confirmado") || normalized.includes("email nao confirmado");
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { status } = useSession();
   const isLoading = status === "loading";
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [expiredError, setExpiredError] = useState<string | null>(null);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
+  const expiredError =
+    searchParams.get("expired") === "true"
+      ? "Sua sessão expirou. Por favor, faça login novamente."
+      : null;
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -54,17 +65,9 @@ export default function LoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("expired") === "true") {
-        setExpiredError("Sua sessão expirou. Por favor, faça login novamente.");
-      }
-    }
-  }, []);
-
   const onSubmit = async (values: LoginFormData) => {
     setSubmitError(null);
+    setEmailNotConfirmed(false);
 
     try {
       const result = await signIn("credentials", {
@@ -74,6 +77,9 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
+        if (isEmailNotConfirmedError(result.error)) {
+          setEmailNotConfirmed(true);
+        }
         throw new Error(result.error);
       }
 
@@ -169,7 +175,25 @@ export default function LoginPage() {
               ) : null}
             </div>
 
-            {submitError ? (
+            {submitError && emailNotConfirmed ? (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-4 py-3 rounded-xl">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="size-4.5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <span>{submitError}</span>
+                    <div>
+                      <Link
+                        className="inline-flex items-center gap-1.5 text-trampo-primary-500 font-bold hover:text-trampo-primary-400 transition-colors"
+                        href={`/verify-email?email=${encodeURIComponent(getValues("email"))}`}
+                      >
+                        Reenviar e-mail de ativação
+                        <ArrowRight className="size-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : submitError ? (
               <p className="text-sm font-medium text-destructive py-1">{submitError}</p>
             ) : null}
 
@@ -250,5 +274,19 @@ export default function LoginPage() {
         </div>
       }
     />
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen w-full items-center justify-center bg-white">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-trampo-primary-500 border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

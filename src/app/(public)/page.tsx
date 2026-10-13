@@ -339,7 +339,7 @@ export default function LandingPage() {
                     <Star className="size-4 fill-current" />
                   </div>
                   <p className="mb-8 text-sm italic leading-relaxed text-trampo-muted">
-                    "Em 2 semanas consegui 5 entrevistas reais. O Trampo limpou o processo de busca e me permitiu focar apenas em estudar para os algoritmos."
+                    &ldquo;Em 2 semanas consegui 5 entrevistas reais. O Trampo limpou o processo de busca e me permitiu focar apenas em estudar para os algoritmos.&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -364,7 +364,7 @@ export default function LandingPage() {
                     <Star className="size-4 fill-current" />
                   </div>
                   <p className="mb-8 text-sm italic leading-relaxed text-trampo-muted">
-                    "A integração com a Gupy e LinkedIn é impecável. O preenchimento automático salvou minha sanidade mental na hora de enviar centenas de currículos."
+                    &ldquo;A integração com a Gupy e LinkedIn é impecável. O preenchimento automático salvou minha sanidade mental na hora de enviar centenas de currículos.&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -389,7 +389,7 @@ export default function LandingPage() {
                     <Star className="size-4 fill-current" />
                   </div>
                   <p className="mb-8 text-sm italic leading-relaxed text-trampo-muted">
-                    "Eu estava cético, mas os resultados vieram rápido. Recomendo para qualquer um que esteja em busca ativa no mercado de desenvolvimento hoje."
+                    &ldquo;Eu estava cético, mas os resultados vieram rápido. Recomendo para qualquer um que esteja em busca ativa no mercado de desenvolvimento hoje.&rdquo;
                   </p>
                 </div>
                 <div className="flex items-center gap-4">

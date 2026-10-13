@@ -8,7 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthLayout } from "@/components/layout/auth-layout";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { register as registerService } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,17 +79,7 @@ export default function RegisterPage() {
         confirmPassword: values.confirmPassword,
       });
 
-      const result = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      router.replace("/dashboard");
+      router.replace(`/verify-email?email=${encodeURIComponent(values.email)}`);
     } catch (error) {
       setSubmitError(getErrorMessage(error));
     }
@@ -114,7 +104,8 @@ export default function RegisterPage() {
             </div>
             <h1 className="text-3xl font-extrabold text-trampo-dark tracking-tight mb-2">Crie sua conta</h1>
             <p className="text-trampo-muted text-sm font-medium">
-              Comece sua jornada rumo à carreira dos seus sonhos com automação inteligente.
+              Comece sua jornada rumo à carreira dos seus sonhos com automação inteligente. Após o cadastro,
+              enviaremos um e-mail de confirmação para ativar sua conta.
             </p>
           </div>
 

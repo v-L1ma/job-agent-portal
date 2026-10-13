@@ -10,7 +10,7 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, ArrowRight, ArrowLeft, ShieldCheck, Key } from "lucide-react";
+import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
 
 import { forgotPassword as forgotPasswordService } from "@/services/auth";
 
@@ -40,8 +40,11 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPasswordService({ email: values.email });
       setIsSubmitted(true);
-    } catch (error: any) {
-      setSubmitError(error.message || "Não foi possível enviar o e-mail de recuperação. Tente novamente.");
+    } catch (error) {
+      setSubmitError(
+        (error instanceof Error && error.message) ||
+          "Não foi possível enviar o e-mail de recuperação. Tente novamente."
+      );
     }
   };
 
