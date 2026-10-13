@@ -2,14 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Check, CreditCard, XCircle } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  Check,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+  Receipt,
+  RotateCcw,
+  XCircle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { showError, showSuccess } from "@/lib/toast";
 import { getPublicPlans } from "@/services/plan";
-import { getMySubscription } from "@/services/subscription";
-import { MySubscription } from "@/types/subscription";
+import {
+  cancelSubscription,
+  createPortalSession,
+  getMyInvoices,
+  getMySubscription,
+  resumeSubscription,
+} from "@/services/subscription";
+import { Invoice, MySubscription } from "@/types/subscription";
 import { Plan } from "@/types/plan";
 
 type RawPlan = Partial<Plan> & {
@@ -70,6 +86,66 @@ function statusLabel(status: string): string {
   return labels[status] ?? status;
 }
 
+function formatDateTime(iso?: string | null): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function shortId(id: string): string {
+  return id.length > 8 ? `${id.slice(0, 8)}…` : id;
+}
+
+const invoiceStatusLabels: Record<string, string> = {
+  paid: "Paga",
+  open: "Em aberto",
+  void: "Anulada",
+  uncollectible: "Inadimplente",
+};
+
+const invoiceStatusStyles: Record<string, string> = {
+  paid: "border-trampo-primary-100 bg-[#F2FCFA] text-trampo-primary-600",
+  open: "border-blue-200 bg-blue-50 text-blue-700",
+  void: "border-neutral-200 bg-neutral-50 text-neutral-500",
+  uncollectible: "border-amber-200 bg-amber-50 text-amber-700",
+};
+
+function InvoiceRow({ invoice }: { invoice: Invoice }) {
+  const statusKey = invoice.status.toLowerCase();
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-1.5 py-2.5">
+      <span className="w-36 text-xs font-semibold text-trampo-dark">
+        {formatDateTime(invoice.createdAt)}
+      </span>
+      <span className="text-xs font-bold text-trampo-dark">
+        {formatPrice(invoice.amountPaid)}
+      </span>
+      <Badge
+        className={`rounded-lg font-bold ${
+          invoiceStatusStyles[statusKey] ??
+          "border-neutral-200 bg-neutral-50 text-neutral-500"
+        }`}
+      >
+        {invoiceStatusLabels[statusKey] ?? invoice.status}
+      </Badge>
+      <span
+        className="ml-auto font-mono text-[10px] text-trampo-muted"
+        title={invoice.id}
+      >
+        {shortId(invoice.id)}
+      </span>
+    </li>
+  );
+}
+
 function PlanError({
   message,
   onRetry,
@@ -98,7 +174,10 @@ function PlanError({
 
 export function PlanSection() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isChoosingPlan, setIsChoosingPlan] = useState(false);
+  const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
+  const [showInvoices, setShowInvoices] = useState(false);
 
   const {
     data: subscription,
@@ -109,6 +188,19 @@ export function PlanSection() {
   } = useQuery({
     queryKey: ["my-subscription"],
     queryFn: async () => getMySubscription(),
+    retry: 1,
+  });
+
+  const {
+    data: invoices,
+    isLoading: isLoadingInvoices,
+    isError: isErrorInvoices,
+    error: invoicesError,
+    refetch: refetchInvoices,
+  } = useQuery({
+    queryKey: ["my-invoices"],
+    queryFn: async () => getMyInvoices(),
+    enabled: showInvoices,
     retry: 1,
   });
 
@@ -128,10 +220,69 @@ export function PlanSection() {
     retry: 1,
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: async () => cancelSubscription(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+      setIsConfirmingCancel(false);
+      showSuccess(
+        "Assinatura cancelada",
+        "Seu acesso continua até o fim do período atual."
+      );
+    },
+    onError: (e) => {
+      console.error("Error on cancelSubscription", e);
+      showError(
+        "Erro ao cancelar assinatura",
+        "Não foi possível cancelar sua assinatura. Por favor, tente novamente."
+      );
+    },
+  });
+
+  const resumeMutation = useMutation({
+    mutationFn: async () => resumeSubscription(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+      showSuccess(
+        "Assinatura retomada",
+        "Seu plano voltou a ficar ativo e será renovado normalmente."
+      );
+    },
+    onError: (e) => {
+      console.error("Error on resumeSubscription", e);
+      showError(
+        "Erro ao retomar assinatura",
+        "Não foi possível retomar sua assinatura. Por favor, tente novamente."
+      );
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: async () => createPortalSession(),
+    onSuccess: ({ url }) => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    },
+    onError: (e) => {
+      console.error("Error on createPortalSession", e);
+      showError(
+        "Erro ao abrir portal de cobrança",
+        "Não foi possível abrir o portal de cobrança. Por favor, tente novamente."
+      );
+    },
+  });
+
   const mySubscription: MySubscription | null = subscription ?? null;
   const currentPlan = mySubscription?.plan ?? null;
   const planList = plans ?? [];
+  const invoiceList = invoices ?? [];
   const renewalDate = formatDate(mySubscription?.currentPeriodEnd);
+  const subscriptionStatus = (mySubscription?.status ?? "").toLowerCase();
+  // Statuses em que a assinatura ainda está "viva" e pode ser cancelada no Stripe.
+  const hasLiveSubscription =
+    !!mySubscription &&
+    ["active", "trialing", "past_due"].includes(subscriptionStatus);
+  const canCancel =
+    hasLiveSubscription && !mySubscription.cancelAtPeriodEnd;
 
   return (
     <section>
@@ -152,44 +303,211 @@ export function PlanSection() {
           onRetry={() => refetchSubscription()}
         />
       ) : (
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-wider text-trampo-muted">
-              Plano atual
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-lg font-bold text-trampo-dark">
-                {currentPlan?.name ?? "Sem plano ativo"}
-              </span>
-              {currentPlan && (
-                <Badge
-                  variant="outline"
-                  className="rounded-lg border-trampo-primary-100 bg-[#F2FCFA] font-bold text-trampo-primary-600"
-                >
-                  {statusLabel(mySubscription?.status ?? "")}
-                </Badge>
-              )}
+        <>
+          <div className="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wider text-trampo-muted">
+                Plano atual
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-lg font-bold text-trampo-dark">
+                  {currentPlan?.name ?? "Sem plano ativo"}
+                </span>
+                {currentPlan && (
+                  <Badge
+                    variant="outline"
+                    className="rounded-lg border-trampo-primary-100 bg-[#F2FCFA] font-bold text-trampo-primary-600"
+                  >
+                    {statusLabel(mySubscription?.status ?? "")}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-trampo-muted">
+                {currentPlan
+                  ? `${formatPrice(currentPlan.price)}/mês${
+                      renewalDate ? ` · Renovação em ${renewalDate}` : ""
+                    }`
+                  : "Assine um plano para ter acesso a todos os recursos."}
+              </p>
             </div>
-            <p className="text-xs text-trampo-muted">
-              {currentPlan
-                ? `${formatPrice(currentPlan.price)}/mês${
-                    renewalDate ? ` · Renovação em ${renewalDate}` : ""
-                  }`
-                : "Assine um plano para ter acesso a todos os recursos."}
-            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0 rounded-xl px-5 py-5 text-sm font-bold"
+              aria-expanded={isChoosingPlan}
+              onClick={() => setIsChoosingPlan((prev) => !prev)}
+            >
+              <CreditCard className="mr-2 size-4" />
+              Mudar plano
+            </Button>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="shrink-0 rounded-xl px-5 py-5 text-sm font-bold"
-            aria-expanded={isChoosingPlan}
-            onClick={() => setIsChoosingPlan((prev) => !prev)}
-          >
-            <CreditCard className="mr-2 size-4" />
-            Mudar plano
-          </Button>
-        </div>
+          {mySubscription?.cancelAtPeriodEnd && (
+            <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-amber-800">
+                    {renewalDate
+                      ? `Sua assinatura será cancelada em ${renewalDate}.`
+                      : "Sua assinatura será cancelada no fim do período atual."}
+                  </p>
+                  <p className="text-xs text-amber-700/90">
+                    Você continua com acesso a todos os recursos até essa data.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 rounded-lg border-amber-300 bg-white text-xs font-bold text-amber-700 hover:bg-amber-100/60"
+                disabled={resumeMutation.isPending}
+                onClick={() => resumeMutation.mutate()}
+              >
+                {resumeMutation.isPending ? (
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                ) : (
+                  <RotateCcw className="mr-1.5 size-3.5" />
+                )}
+                Retomar assinatura
+              </Button>
+            </div>
+          )}
+
+          {isConfirmingCancel ? (
+            <div className="mt-4 space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-red-600">
+                  Cancelar assinatura?
+                </p>
+                <p className="text-xs text-red-500/90">
+                  Seu plano será cancelado e{" "}
+                  {renewalDate
+                    ? `você continuará com acesso até ${renewalDate}`
+                    : "você continuará com acesso até o fim do período atual"}
+                  . Depois disso, você perde o acesso aos recursos do plano.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg border-red-600 bg-red-600 text-xs font-bold text-white hover:bg-red-700 hover:text-white"
+                  disabled={cancelMutation.isPending}
+                  onClick={() => cancelMutation.mutate()}
+                >
+                  {cancelMutation.isPending && (
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  )}
+                  Sim, cancelar assinatura
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg text-xs font-bold"
+                  disabled={cancelMutation.isPending}
+                  onClick={() => setIsConfirmingCancel(false)}
+                >
+                  Manter assinatura
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {canCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl border-red-200 px-4 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => setIsConfirmingCancel(true)}
+                >
+                  <XCircle className="mr-1.5 size-3.5" />
+                  Cancelar assinatura
+                </Button>
+              )}
+
+              {mySubscription && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl px-4 text-xs font-bold"
+                  disabled={portalMutation.isPending}
+                  onClick={() => portalMutation.mutate()}
+                >
+                  {portalMutation.isPending ? (
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  ) : (
+                    <ExternalLink className="mr-1.5 size-3.5" />
+                  )}
+                  Gerenciar cobrança
+                </Button>
+              )}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl px-4 text-xs font-bold"
+                aria-expanded={showInvoices}
+                onClick={() => setShowInvoices((prev) => !prev)}
+              >
+                <Receipt className="mr-1.5 size-3.5" />
+                {showInvoices ? "Ocultar faturas" : "Ver faturas"}
+              </Button>
+            </div>
+          )}
+
+          {showInvoices && (
+            <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <Receipt className="size-4 text-trampo-primary-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-trampo-muted">
+                  Faturas
+                </h4>
+              </div>
+
+              {isLoadingInvoices ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <Skeleton
+                      key={i}
+                      className="h-8 w-full bg-slate-100 dark:bg-slate-800"
+                    />
+                  ))}
+                </div>
+              ) : isErrorInvoices ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-4 text-center">
+                  <p className="text-xs font-bold text-red-600">
+                    {invoicesError?.message ||
+                      "Não foi possível carregar as faturas."}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg border-red-300 text-red-600 hover:bg-red-100/50"
+                    onClick={() => refetchInvoices()}
+                  >
+                    Tentar Novamente
+                  </Button>
+                </div>
+              ) : invoiceList.length === 0 ? (
+                <p className="text-xs font-semibold text-trampo-muted">
+                  Nenhuma fatura ainda
+                </p>
+              ) : (
+                <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {invoiceList.map((invoice) => (
+                    <InvoiceRow key={invoice.id} invoice={invoice} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {isChoosingPlan && (

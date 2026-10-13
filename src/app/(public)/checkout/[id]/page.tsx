@@ -106,7 +106,17 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {clientSecret && (
+      {!stripePromise && (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+          <XCircle className="size-8 text-red-500" />
+          <p className="text-xs font-bold text-red-600">Pagamentos indisponíveis</p>
+          <p className="text-xs text-red-500/80">
+            A chave pública do Stripe não está configurada nesta aplicação. Contate o suporte.
+          </p>
+        </div>
+      )}
+
+      {clientSecret && stripePromise && (
         <CheckoutFormProvider
           stripe={stripePromise}
           options={{ clientSecret }}

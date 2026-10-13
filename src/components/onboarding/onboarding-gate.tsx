@@ -1,21 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { data: session, update } = useSession();
-  const [showModal, setShowModal] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    if (session?.user?.onboardingCompleted === false) {
-      setShowModal(true);
-    }
-  }, [session]);
+  const needsOnboarding = session?.user?.onboardingCompleted === false;
+  const showModal = needsOnboarding && !dismissed;
 
   const handleComplete = async () => {
-    setShowModal(false);
+    setDismissed(true);
     await update({ onboardingCompleted: true });
   };
 

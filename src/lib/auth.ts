@@ -3,12 +3,22 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { login, loginWithGoogle } from "@/services/auth";
 
-function getFieldFromToken(token: string, field: string): any {
+interface JwtPayload {
+  role?: string;
+  user_role?: string;
+  roles?: string[];
+  user?: { role?: string };
+  onboardingCompleted?: boolean;
+  onboarding_completed?: boolean;
+  sub?: string;
+}
+
+function parseJwtPayload(token: string): JwtPayload | undefined {
   try {
     const payload = token.split(".")[1];
     if (!payload) return undefined;
     const json = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8"));
-    return field ? json[field] : json;
+    return json as JwtPayload;
   } catch {
     return undefined;
   }
@@ -35,7 +45,7 @@ export const authOptions: AuthOptions = {
           });
 
           if (response && response.token) {
-            const tokenPayload = getFieldFromToken(response.token, "") || {};
+            const tokenPayload = parseJwtPayload(response.token) ?? {};
             const role = response.user?.role
               ?? tokenPayload.role ?? tokenPayload.user_role ?? tokenPayload.roles?.[0] ?? tokenPayload.user?.role;
             const onboardingCompleted = response.user?.onboardingCompleted
@@ -51,8 +61,10 @@ export const authOptions: AuthOptions = {
             };
           }
           return null;
-        } catch (error: any) {
-          throw new Error(error.message || "Credenciais inválidas.");
+        } catch (error) {
+          throw new Error(
+            error instanceof Error && error.message ? error.message : "Credenciais inválidas."
+          );
         }
       }
     }),
@@ -80,7 +92,7 @@ export const authOptions: AuthOptions = {
         });
 
         if (response?.token) {
-          const tokenPayload = getFieldFromToken(response.token, "") || {};
+          const tokenPayload = parseJwtPayload(response.token) ?? {};
           token.id = response.user?.id ?? tokenPayload.sub;
           token.role = response.user?.role
             ?? tokenPayload.role ?? tokenPayload.user_role ?? tokenPayload.roles?.[0] ?? tokenPayload.user?.role;

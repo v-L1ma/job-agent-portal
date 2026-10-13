@@ -52,7 +52,6 @@ export function SidebarMain() {
     { name: "Cargos", href: "/admin/roles", icon: Shield },
     { name: "Planos", href: "/admin/plans", icon: CreditCard },
     { name: "Assinaturas", href: "/admin/subscriptions", icon: RefreshCw },
-    { name: "Aplicações", href: "/admin/aplicacoes", icon: Layers },
   ];
 
   return (

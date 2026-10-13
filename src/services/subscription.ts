@@ -1,8 +1,13 @@
 import {
+  InvoicesResponse,
+  Invoice,
   MySubscription,
   MySubscriptionResponse,
+  PortalSession,
+  PortalSessionResponse,
   Subscription,
   SubscriptionsResponse,
+  SubscriptionActionResponse,
   SubscriptionDetail,
   SubscriptionDetailResponse,
   UserSubscriptions,
@@ -43,5 +48,47 @@ export async function getMySubscription(): Promise<MySubscription | null> {
     return response.data.data ?? null;
   } catch (error) {
     throw toApiError(error, "Não foi possível carregar sua assinatura.");
+  }
+}
+
+export async function cancelSubscription(): Promise<MySubscription> {
+  try {
+    const response = await api.post<SubscriptionActionResponse>(
+      "/subscriptions/me/cancel"
+    );
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível cancelar a assinatura.");
+  }
+}
+
+export async function resumeSubscription(): Promise<MySubscription> {
+  try {
+    const response = await api.post<SubscriptionActionResponse>(
+      "/subscriptions/me/resume"
+    );
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível retomar a assinatura.");
+  }
+}
+
+export async function createPortalSession(): Promise<PortalSession> {
+  try {
+    const response = await api.post<PortalSessionResponse>(
+      "/subscriptions/me/portal-session"
+    );
+    return response.data.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível abrir o portal de cobrança.");
+  }
+}
+
+export async function getMyInvoices(): Promise<Invoice[]> {
+  try {
+    const response = await api.get<InvoicesResponse>("/subscriptions/me/invoices");
+    return response.data.data ?? [];
+  } catch (error) {
+    throw toApiError(error, "Não foi possível carregar suas faturas.");
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
 
@@ -47,6 +47,24 @@ function detectBrowser(): Browser {
   return "unknown";
 }
 
+/**
+ * Detecta o navegador sem causar mismatch de hidratação:
+ * o servidor sempre renderiza "unknown" e o cliente corrige após a hidratação.
+ */
+function subscribeBrowserChange(onChange: () => void) {
+  // A detecção não depende de eventos: o valor é estável durante a sessão.
+  void onChange;
+  return () => {};
+}
+
+function useDetectedBrowser(): Browser {
+  return useSyncExternalStore(
+    subscribeBrowserChange,
+    detectBrowser,
+    () => "unknown" as Browser
+  );
+}
+
 const allBrowsers: { key: Browser; icon: React.ReactNode }[] = [
   {
     key: "chrome",
@@ -84,11 +102,7 @@ const allBrowsers: { key: Browser; icon: React.ReactNode }[] = [
 ];
 
 export function BrowserDetectHero() {
-  const [browser, setBrowser] = useState<Browser>("unknown");
-
-  useEffect(() => {
-    setBrowser(detectBrowser());
-  }, []);
+  const browser = useDetectedBrowser();
 
   const detected = browserStores[browser];
 
@@ -108,11 +122,7 @@ export function BrowserDetectHero() {
 }
 
 export function BrowserDetectAll() {
-  const [browser, setBrowser] = useState<Browser>("unknown");
-
-  useEffect(() => {
-    setBrowser(detectBrowser());
-  }, []);
+  const browser = useDetectedBrowser();
 
   const others = allBrowsers.filter((b) => b.key !== browser);
 
@@ -138,11 +148,7 @@ export function BrowserDetectAll() {
 }
 
 export function BrowserDetectCTA() {
-  const [browser, setBrowser] = useState<Browser>("unknown");
-
-  useEffect(() => {
-    setBrowser(detectBrowser());
-  }, []);
+  const browser = useDetectedBrowser();
 
   const detected = browserStores[browser];
 
@@ -160,11 +166,7 @@ export function BrowserDetectCTA() {
 }
 
 export function BrowserDetectHeader() {
-  const [browser, setBrowser] = useState<Browser>("unknown");
-
-  useEffect(() => {
-    setBrowser(detectBrowser());
-  }, []);
+  const browser = useDetectedBrowser();
 
   const detected = browserStores[browser];
 

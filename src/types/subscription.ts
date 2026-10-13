@@ -44,6 +44,25 @@ export interface MySubscriptionResponse {
   data: MySubscription | null;
 }
 
+export interface SubscriptionActionResponse {
+  message: string;
+  data: MySubscription;
+}
+
+export interface PortalSession {
+  url: string;
+}
+
+export interface PortalSessionResponse {
+  message: string;
+  data: PortalSession;
+}
+
+export interface InvoicesResponse {
+  message: string;
+  data: Invoice[];
+}
+
 export interface AdminUser {
   id: string;
   name: string;

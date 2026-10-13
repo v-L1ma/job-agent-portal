@@ -36,7 +36,6 @@ export interface ResetPasswordPayload {
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   try {
-    console.log(`${process.env.NEXT_PUBLIC_API_URL}/login`)
     const response = await api.post<LoginResponse>("/login", payload);
     return response.data;
   } catch (error) {
@@ -61,9 +60,47 @@ export async function register(payload: RegisterPayload): Promise<void> {
   }
 }
 
-export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string; resetToken: string }> {
+export interface VerifyEmailPayload {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+}
+
+export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEmailResponse> {
   try {
-    const response = await api.post<{ message: string; resetToken: string }>("/forgot-password", payload);
+    const response = await api.post<VerifyEmailResponse>("/verify-email", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível verificar seu e-mail.");
+  }
+}
+
+export interface ResendConfirmationPayload {
+  email: string;
+}
+
+export interface ResendConfirmationResponse {
+  message: string;
+}
+
+export async function resendConfirmation(payload: ResendConfirmationPayload): Promise<ResendConfirmationResponse> {
+  try {
+    const response = await api.post<ResendConfirmationResponse>("/resend-confirmation", payload);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error, "Não foi possível reenviar o e-mail de confirmação.");
+  }
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<ForgotPasswordResponse> {
+  try {
+    const response = await api.post<ForgotPasswordResponse>("/forgot-password", payload);
     return response.data;
   } catch (error) {
     throw toApiError(error, "Não foi possível enviar o link de recuperação.");

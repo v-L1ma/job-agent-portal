@@ -137,7 +137,6 @@ export function CurriculoForm({
 
   const loadCvStatusAndMetadata = useCallback(async () => {
     try {
-      setLoadingCurrentCv(true);
       const { blob, fileName, fileSize, uploadedAt } = await getUserCv();
       setHasUploadedCv(true);
       setCurrentCvMetadata({
@@ -164,7 +163,6 @@ export function CurriculoForm({
 
   const loadGeneratedCvsList = useCallback(async () => {
     try {
-      setLoadingGeneratedCvs(true);
       const items = await getGeneratedCvs();
       setGeneratedCvs(items);
     } catch (error) {
@@ -175,8 +173,11 @@ export function CurriculoForm({
   }, []);
 
   useEffect(() => {
-    void loadCvStatusAndMetadata();
-    void loadGeneratedCvsList();
+    // Carrega os dados em paralelo; os setters são chamados após o await
+    // (fora do corpo síncrono do effect), evitando renders encadeados.
+    void (async () => {
+      await Promise.all([loadCvStatusAndMetadata(), loadGeneratedCvsList()]);
+    })();
   }, [loadCvStatusAndMetadata, loadGeneratedCvsList]);
 
   useEffect(() => {
@@ -203,9 +204,13 @@ export function CurriculoForm({
       setCvFile(null);
       setHasUploadedCv(true);
       onUploadSuccess?.();
+      setLoadingCurrentCv(true);
       await loadCvStatusAndMetadata();
-    } catch (uploadError: any) {
-      const msg = uploadError?.message || "Não foi possível enviar o currículo.";
+    } catch (uploadError) {
+      const msg =
+        uploadError instanceof Error && uploadError.message
+          ? uploadError.message
+          : "Não foi possível enviar o currículo.";
       setCvMessage({ text: msg, type: "error" });
     } finally {
       setUploadingCv(false);
