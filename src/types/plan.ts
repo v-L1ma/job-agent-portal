@@ -6,8 +6,20 @@ export interface Plan {
   price: number;
   roleId: string;
   active: boolean;
+  dailyCvLimit: number | null;
+  dailyApplicationLimit: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PlanLimits {
+  dailyCvLimit: number | null;
+  dailyApplicationLimit: number | null;
+}
+
+export interface PlanLimitsResponse {
+  message: string;
+  data: PlanLimits;
 }
 
 export interface PlansResponse {

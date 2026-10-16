@@ -94,7 +94,7 @@ export default function VagasPage() {
       setGeneratedCv(result);
     },
     onError: (err) => {
-      const apiMessage = (err as Error & { error?: string }).error;
+      const apiMessage = err.message || (err as Error & { error?: string }).error;
       setCvErrorMsg(apiMessage || "Houve uma falha ao gerar o currículo personalizado. Certifique-se de que você fez upload do seu currículo e tente novamente.");
       console.error(err);
     },
